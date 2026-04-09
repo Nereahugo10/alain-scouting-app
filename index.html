@@ -1,0 +1,409 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Al Ain Scouting</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+
+<body style="font-family: Arial; padding: 20px;">
+  <h1>Al Ain Scouting App</h1>
+
+  <div style="margin-bottom: 16px;">
+    <input type="file" id="excelFile" accept=".xlsx,.xls" />
+    <button onclick="loadExcel()">Leer Excel</button>
+    <button onclick="saveToSupabase()">Guardar en Supabase</button>
+    <button onclick="loadFromSupabase()">Cargar desde Supabase</button>
+  </div>
+
+  <div style="margin-bottom: 16px; padding: 10px; border: 1px solid #ccc;">
+    <h3>Filtros</h3>
+
+    <label>Posición:</label>
+    <input type="text" id="filterPosition" placeholder="Ej: LWB, RWB, WB" />
+
+    <label style="margin-left: 10px;">Edad máxima:</label>
+    <input type="number" id="filterAge" placeholder="Ej: 24" />
+
+    <label style="margin-left: 10px;">Minutos mínimos:</label>
+    <input type="number" id="filterMinutes" placeholder="Ej: 700" />
+
+    <br><br>
+
+    <label>Rating mínimo:</label>
+    <input type="number" step="0.1" id="filterRating" placeholder="Ej: 7.0" />
+
+    <label style="margin-left: 10px;">Adaptación mínima:</label>
+    <input type="number" step="0.1" id="filterAdaptation" placeholder="Ej: 7.5" />
+
+    <button style="margin-left: 10px;" onclick="applyFilters()">Aplicar filtros</button>
+    <button onclick="clearFilters()">Limpiar filtros</button>
+  </div>
+
+  <table border="1" id="playersTable" style="margin-top:20px; border-collapse: collapse; width: 100%;">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Equipo</th>
+        <th>Edad</th>
+        <th>Posición</th>
+        <th>Minutos</th>
+        <th>Rating</th>
+        <th>Adaptación</th>
+        <th>Factor liga</th>
+        <th>Weighted Rating</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const supabaseClient = supabase.createClient(
+      "https://ruzchxrkrluoswnjmrwr.supabase.co",
+      "sb_publishable_ktvDFCCVsG0PiQDTIGODKQ_EGvhXUMz"
+    );
+
+    let processedPlayers = [];
+    let currentPlayers = [];
+
+    function toNumber(v) {
+      if (v === null || v === undefined || v === "") return 0;
+      return Number(String(v).replace(",", ".")) || 0;
+    }
+
+    function normalize(v, max) {
+      return Math.min(1, toNumber(v) / max);
+    }
+
+    function getValue(obj, possibleKeys) {
+      for (const key of possibleKeys) {
+        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
+          return obj[key];
+        }
+      }
+
+      const realKeys = Object.keys(obj);
+      for (const wanted of possibleKeys) {
+        const found = realKeys.find(k => k.trim().toLowerCase() === wanted.trim().toLowerCase());
+        if (found) return obj[found];
+      }
+
+      return "";
+    }
+
+    function calculateWeightedRating(player) {
+      const factor = toNumber(player.league_factor);
+      if (!factor) return player.wingback_rating || 0;
+      return Number((toNumber(player.wingback_rating) * factor).toFixed(2));
+    }
+
+    function renderTable(players) {
+      const table = document.querySelector("#playersTable tbody");
+      table.innerHTML = "";
+
+      players.forEach((p, index) => {
+        const weightedRating = calculateWeightedRating(p);
+
+        table.innerHTML += `
+          <tr>
+            <td>${p.name || ""}</td>
+            <td>${p.team || ""}</td>
+            <td>${p.age || ""}</td>
+            <td>${p.position || ""}</td>
+            <td>${p.minutes_played || ""}</td>
+            <td>${p.wingback_rating || ""}</td>
+            <td>${p.adaptation_score || ""}</td>
+            <td>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="1.2"
+                value="${p.league_factor || ""}"
+                placeholder="Ej: 0.92"
+                onchange="updateLeagueFactor(${index}, this.value)"
+                style="width:80px;"
+              />
+            </td>
+            <td>${weightedRating}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function updateLeagueFactor(index, value) {
+      const numericValue = toNumber(value);
+
+      if (currentPlayers[index]) {
+        currentPlayers[index].league_factor = numericValue;
+      }
+
+      const key = currentPlayers[index]?.player_key;
+      if (key) {
+        const originalIndex = processedPlayers.findIndex(p => p.player_key === key);
+        if (originalIndex !== -1) {
+          processedPlayers[originalIndex].league_factor = numericValue;
+        }
+      }
+
+      renderTable(currentPlayers);
+    }
+
+    function processExcelRows(json, fileName) {
+      return json.map(p => {
+        const name = getValue(p, ["Name", "name", "Player", "Player name"]);
+        const team = getValue(p, ["Team", "team", "Squad"]);
+        const age = toNumber(getValue(p, ["Age", "age"]));
+        const position = getValue(p, ["Position", "position", "Pos"]);
+        const minutesPlayed = toNumber(getValue(p, ["minuges played", "Minutes played", "minutes played"]));
+
+        const progressive = toNumber(getValue(p, [
+          "Progresive Runs 90",
+          "Progressive runs per 90",
+          "progressive_runs_p90"
+        ]));
+
+        const dribbles = toNumber(getValue(p, [
+          "dribblies_p90",
+          "Dribbles per 90",
+          "dribbles_p90"
+        ]));
+
+        const successfulDribblesPct = toNumber(getValue(p, [
+          "successful_dribbles_pct",
+          "Successful dribbles, %",
+          "Successful dribbles %"
+        ]));
+
+        const crosses = toNumber(getValue(p, [
+          "crosses_p90",
+          "Crosses per 90"
+        ]));
+
+        const accurateCrossesPct = toNumber(getValue(p, [
+          "accurate_crosses_pct",
+          "Accurate crosses, %",
+          "Accurate crosses %"
+        ]));
+
+        const defensiveDuelsP90 = toNumber(getValue(p, [
+          "defensive_duels_p90",
+          "Defensive duels per 90"
+        ]));
+
+        const defensiveDuelsWonPct = toNumber(getValue(p, [
+          "defensive_duels_won_pct",
+          "Defensive duels won, %",
+          "Defensive duels won %"
+        ]));
+
+        const interceptionsP90 = toNumber(getValue(p, [
+          "interceptions_p90",
+          "Interceptions per 90"
+        ]));
+
+        const padjSlidingTackles = toNumber(getValue(p, [
+          "padj_sliding_tackles",
+          "PAdj Sliding tackles"
+        ]));
+
+        const shotsBlockedP90 = toNumber(getValue(p, [
+          "shots_blocked_p90",
+          "Shots blocked per 90"
+        ]));
+
+        const accelerationsP90 = toNumber(getValue(p, [
+          "accelerations_p90",
+          "Accelerations per 90"
+        ]));
+
+        const touchesInBoxP90 = toNumber(getValue(p, [
+          "touches_in_box_p90",
+          "Touches in box per 90"
+        ]));
+
+        const receivedPassesP90 = toNumber(getValue(p, [
+          "received_passes_p90",
+          "Received passes per 90"
+        ]));
+
+        const dribbleImpact = dribbles * (successfulDribblesPct / 100);
+        const crossImpact = crosses * (accurateCrossesPct / 100);
+
+        const defensiveActions =
+          0.35 * (defensiveDuelsWonPct / 100) +
+          0.25 * defensiveDuelsP90 +
+          0.20 * interceptionsP90 +
+          0.20 * padjSlidingTackles;
+
+        const recoveriesProxy =
+          0.60 * interceptionsP90 +
+          0.40 * shotsBlockedP90;
+
+        const rating =
+          (
+            0.25 * normalize(progressive, 4) +
+            0.20 * normalize(dribbleImpact, 4) +
+            0.20 * normalize(crossImpact, 2.5) +
+            0.20 * normalize(defensiveActions, 5) +
+            0.15 * normalize(recoveriesProxy, 3)
+          ) * 10;
+
+        const adaptation =
+          (
+            0.22 * normalize(progressive, 6) +
+            0.18 * (0.55 * normalize(dribbles, 5) + 0.45 * normalize(successfulDribblesPct, 70)) +
+            0.18 * (0.60 * normalize(crosses, 6) + 0.40 * normalize(accurateCrossesPct, 40)) +
+            0.20 * (
+              0.35 * normalize(defensiveDuelsWonPct, 75) +
+              0.25 * normalize(defensiveDuelsP90, 8) +
+              0.25 * normalize(interceptionsP90, 3) +
+              0.15 * normalize(padjSlidingTackles, 4)
+            ) +
+            0.12 * (
+              0.70 * normalize(accelerationsP90, 4) +
+              0.30 * normalize(progressive, 6)
+            ) +
+            0.10 * (
+              0.60 * normalize(touchesInBoxP90, 4) +
+              0.40 * normalize(receivedPassesP90, 12)
+            )
+          ) * 10;
+
+        const player_key = (String(name) + "_" + String(team)).toLowerCase().trim();
+
+        return {
+          player_key,
+          name: name || "",
+          team: team || "",
+          age: age || 0,
+          position: position || "",
+          minutes_played: minutesPlayed || 0,
+          progressive_runs_p90: progressive,
+          dribbles_p90: dribbles,
+          successful_dribbles_pct: successfulDribblesPct,
+          crosses_p90: crosses,
+          accurate_crosses_pct: accurateCrossesPct,
+          defensive_duels_p90: defensiveDuelsP90,
+          defensive_duels_won_pct: defensiveDuelsWonPct,
+          interceptions_p90: interceptionsP90,
+          padj_sliding_tackles: padjSlidingTackles,
+          shots_blocked_p90: shotsBlockedP90,
+          accelerations_p90: accelerationsP90,
+          touches_in_box_p90: touchesInBoxP90,
+          received_passes_p90: receivedPassesP90,
+          wingback_rating: Number(rating.toFixed(2)),
+          adaptation_score: Number(adaptation.toFixed(2)),
+          league_factor: 1.00,
+          source_file: fileName
+        };
+      });
+    }
+
+    function loadExcel() {
+      const file = document.getElementById("excelFile").files[0];
+      if (!file) {
+        alert("Selecciona Excel");
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: "array" });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+
+        processedPlayers = processExcelRows(json, file.name);
+        currentPlayers = [...processedPlayers];
+        renderTable(currentPlayers);
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    async function saveToSupabase() {
+      if (!processedPlayers.length) {
+        alert("Primero carga Excel");
+        return;
+      }
+
+      const { data: existing, error: errorFetch } = await supabaseClient
+        .from("players_app")
+        .select("player_key");
+
+      if (errorFetch) {
+        alert("Error leyendo jugadores existentes: " + errorFetch.message);
+        console.log(errorFetch);
+        return;
+      }
+
+      const existingKeys = new Set((existing || []).map(p => p.player_key));
+      const newPlayers = processedPlayers.filter(p => !existingKeys.has(p.player_key));
+
+      if (newPlayers.length === 0) {
+        alert("Todos los jugadores ya existen");
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("players_app")
+        .insert(newPlayers);
+
+      if (error) {
+        alert("Error guardando: " + error.message);
+        console.log(error);
+        return;
+      }
+
+      alert(newPlayers.length + " jugadores nuevos guardados");
+    }
+
+    async function loadFromSupabase() {
+      const { data, error } = await supabaseClient
+        .from("players_app")
+        .select("*")
+        .order("wingback_rating", { ascending: false });
+
+      if (error) {
+        alert(error.message);
+        console.log(error);
+        return;
+      }
+
+      currentPlayers = data || [];
+      renderTable(currentPlayers);
+    }
+
+    function applyFilters() {
+      const positionFilter = document.getElementById("filterPosition").value.trim().toLowerCase();
+      const ageFilter = toNumber(document.getElementById("filterAge").value);
+      const minutesFilter = toNumber(document.getElementById("filterMinutes").value);
+      const ratingFilter = toNumber(document.getElementById("filterRating").value);
+      const adaptationFilter = toNumber(document.getElementById("filterAdaptation").value);
+
+      const filtered = currentPlayers.filter(player => {
+        const matchesPosition = !positionFilter || String(player.position || "").toLowerCase().includes(positionFilter);
+        const matchesAge = !ageFilter || toNumber(player.age) <= ageFilter;
+        const matchesMinutes = !minutesFilter || toNumber(player.minutes_played) >= minutesFilter;
+        const matchesRating = !ratingFilter || toNumber(player.wingback_rating) >= ratingFilter;
+        const matchesAdaptation = !adaptationFilter || toNumber(player.adaptation_score) >= adaptationFilter;
+
+        return matchesPosition && matchesAge && matchesMinutes && matchesRating && matchesAdaptation;
+      });
+
+      renderTable(filtered);
+    }
+
+    function clearFilters() {
+      document.getElementById("filterPosition").value = "";
+      document.getElementById("filterAge").value = "";
+      document.getElementById("filterMinutes").value = "";
+      document.getElementById("filterRating").value = "";
+      document.getElementById("filterAdaptation").value = "";
+      renderTable(currentPlayers);
+    }
+  </script>
+</body>
+</html>
