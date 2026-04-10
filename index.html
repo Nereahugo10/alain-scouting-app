@@ -1,61 +1,550 @@
-﻿<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <title>Al Ain Scouting</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Al Ain Scouting App</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f6fb;
+      --card: #ffffff;
+      --text: #1f2430;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --purple: #5b2c83;
+      --purple-dark: #472166;
+      --gold: #d4af37;
+      --green: #138a4c;
+      --red: #d93025;
+      --amber: #b7791f;
+      --shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: linear-gradient(180deg, #f7f8fc 0%, #f1f4fa 100%);
+      color: var(--text);
+    }
+
+    .app-shell {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--purple) 0%, #6f3aa2 70%, #8350b5 100%);
+      color: white;
+      border-radius: 24px;
+      padding: 28px 32px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      top: -40px;
+      right: -30px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,175,55,0.24) 0%, rgba(212,175,55,0) 72%);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px 0;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: rgba(255,255,255,0.9);
+      max-width: 850px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.2);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .toolbar, .panel, .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 20px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .file-input-wrap input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px dashed #cdd3dd;
+      background: #fafbff;
+      color: var(--muted);
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 800;
+      transition: 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--purple);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--purple-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #111827;
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #eceef2;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #e0bf4e 0%, var(--gold) 100%);
+      color: #2f2300;
+    }
+
+    .btn-gold:hover {
+      filter: brightness(0.98);
+      transform: translateY(-1px);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      padding: 18px;
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      color: var(--purple);
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .kpi-sub {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .panel {
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 18px 20px 10px 20px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .panel-subtitle {
+      margin: 4px 0 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 14px;
+      padding: 16px 20px 20px 20px;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      background: white;
+      color: var(--text);
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: rgba(91,44,131,0.35);
+      box-shadow: 0 0 0 4px rgba(91,44,131,0.08);
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .table-wrap {
+      padding: 0 20px 20px 20px;
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1250px;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #faf8ff;
+      color: #4b5563;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      text-align: left;
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 900;
+    }
+
+    tbody td {
+      padding: 14px;
+      border-bottom: 1px solid #edf0f5;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    tbody tr:hover {
+      background: #fcfbff;
+    }
+
+    .name-cell {
+      font-weight: 900;
+      color: #111827;
+    }
+
+    .team-cell {
+      font-weight: 700;
+      color: #4b5563;
+    }
+
+    .score-badge {
+      display: inline-flex;
+      min-width: 62px;
+      justify-content: center;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .score-good {
+      background: rgba(19,138,76,0.13);
+      color: var(--green);
+    }
+
+    .score-mid {
+      background: rgba(212,175,55,0.18);
+      color: var(--amber);
+    }
+
+    .score-low {
+      background: rgba(217,48,37,0.12);
+      color: var(--red);
+    }
+
+    .weighted-cell {
+      font-weight: 900;
+      color: var(--purple);
+      font-size: 15px;
+    }
+
+    .league-factor-input {
+      width: 86px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 13px;
+      background: white;
+    }
+
+    .league-factor-input:focus {
+      outline: none;
+      border-color: rgba(91,44,131,0.35);
+      box-shadow: 0 0 0 4px rgba(91,44,131,0.08);
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 10px;
+      text-align: right;
+    }
+
+    @media (max-width: 1280px) {
+      .filters-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .app-shell {
+        padding: 14px;
+      }
+
+      .hero {
+        padding: 20px;
+      }
+
+      .hero h1 {
+        font-size: 26px;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .filters-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 
-<body style="font-family: Arial; padding: 20px;">
-  <h1>Al Ain Scouting App</h1>
+<body>
+  <div class="app-shell">
+    <section class="hero">
+      <h1>Al Ain Scouting Dashboard</h1>
+      <p>
+        Plataforma visual de recruitment para analizar carrileros y otros perfiles:
+        carga de Excel, rating automático, adaptación al sistema, weighted rating,
+        filtros avanzados y base consolidada en Supabase.
+      </p>
+      <div class="hero-badge">Scouting • Data • Recruitment • Al Ain Model</div>
+    </section>
 
-  <div style="margin-bottom: 16px;">
-    <input type="file" id="excelFile" accept=".xlsx,.xls" />
-    <button onclick="loadExcel()">Leer Excel</button>
-    <button onclick="saveToSupabase()">Guardar en Supabase</button>
-    <button onclick="loadFromSupabase()">Cargar desde Supabase</button>
+    <section class="toolbar">
+      <div class="file-input-wrap">
+        <input type="file" id="excelFile" accept=".xlsx,.xls" />
+      </div>
+      <button class="btn btn-primary" onclick="loadExcel()">Leer Excel</button>
+      <button class="btn btn-secondary" onclick="saveToSupabase()">Guardar en Supabase</button>
+      <button class="btn btn-gold" onclick="loadFromSupabase()">Cargar desde Supabase</button>
+    </section>
+
+    <section class="cards">
+      <div class="card">
+        <div class="kpi-label">Jugadores visibles</div>
+        <div class="kpi-value" id="kpiPlayers">0</div>
+        <div class="kpi-sub">Registros mostrados en pantalla</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Media rating</div>
+        <div class="kpi-value" id="kpiRating">0.00</div>
+        <div class="kpi-sub">Escala ajustada 4–10</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Media adaptación</div>
+        <div class="kpi-value" id="kpiAdaptation">0.00</div>
+        <div class="kpi-sub">Encaje medio en tu sistema</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Top weighted rating</div>
+        <div class="kpi-value" id="kpiWeighted">0.00</div>
+        <div class="kpi-sub">Rating corregido por factor liga</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Filtros de scouting</h2>
+        <p class="panel-subtitle">Filtra por posición agrupada, equipo, edad, minutos y nivel.</p>
+      </div>
+
+      <div class="filters-grid">
+        <div class="field">
+          <label>Posición agrupada</label>
+          <select id="filterPosition">
+            <option value="">Todas</option>
+            <option value="GK">GK</option>
+            <option value="RB_LB">RB / LB</option>
+            <option value="RWB_LWB">RWB / LWB</option>
+            <option value="CB">CB</option>
+            <option value="DMF">DMF</option>
+            <option value="MC">MC</option>
+            <option value="WG">Wingers</option>
+            <option value="AM">AM</option>
+            <option value="CF">CF</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Equipo</label>
+          <select id="filterTeam">
+            <option value="">Todos</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Edad máxima</label>
+          <input type="number" id="filterAge" placeholder="Ej: 24" />
+        </div>
+
+        <div class="field">
+          <label>Minutos mínimos</label>
+          <input type="number" id="filterMinutes" placeholder="Ej: 700" />
+        </div>
+
+        <div class="field">
+          <label>Rating mínimo</label>
+          <input type="number" step="0.1" id="filterRating" placeholder="Ej: 7.0" />
+        </div>
+
+        <div class="field">
+          <label>Adaptación mínima</label>
+          <input type="number" step="0.1" id="filterAdaptation" placeholder="Ej: 7.5" />
+        </div>
+
+        <div class="field">
+          <label>Ordenar por</label>
+          <select id="sortBy">
+            <option value="weighted_rating">Weighted Rating</option>
+            <option value="wingback_rating">Rating</option>
+            <option value="adaptation_score">Adaptación</option>
+            <option value="minutes_played">Minutos</option>
+            <option value="age">Edad</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn btn-primary" onclick="applyFilters()">Aplicar</button>
+          <button class="btn btn-secondary" onclick="clearFilters()">Limpiar</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Base de jugadores</h2>
+        <p class="panel-subtitle">
+          Ajusta manualmente el factor liga para corregir el contexto competitivo del jugador.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table id="playersTable">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Equipo</th>
+              <th>Edad</th>
+              <th>Posición real</th>
+              <th>Grupo</th>
+              <th>Minutos</th>
+              <th>Rating</th>
+              <th>Adaptación</th>
+              <th>Factor liga</th>
+              <th>Weighted Rating</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div class="footer-note">
+          Recomendación: 1.00 ligas top, 0.92 segundo nivel fuerte, 0.85 medio, 0.78 bajo.
+        </div>
+      </div>
+    </section>
   </div>
-
-  <div style="margin-bottom: 16px; padding: 10px; border: 1px solid #ccc;">
-    <h3>Filtros</h3>
-
-    <label>Posición:</label>
-    <input type="text" id="filterPosition" placeholder="Ej: LWB, RWB, WB" />
-
-    <label style="margin-left: 10px;">Edad máxima:</label>
-    <input type="number" id="filterAge" placeholder="Ej: 24" />
-
-    <label style="margin-left: 10px;">Minutos mínimos:</label>
-    <input type="number" id="filterMinutes" placeholder="Ej: 700" />
-
-    <br><br>
-
-    <label>Rating mínimo:</label>
-    <input type="number" step="0.1" id="filterRating" placeholder="Ej: 7.0" />
-
-    <label style="margin-left: 10px;">Adaptación mínima:</label>
-    <input type="number" step="0.1" id="filterAdaptation" placeholder="Ej: 7.5" />
-
-    <button style="margin-left: 10px;" onclick="applyFilters()">Aplicar filtros</button>
-    <button onclick="clearFilters()">Limpiar filtros</button>
-  </div>
-
-  <table border="1" id="playersTable" style="margin-top:20px; border-collapse: collapse; width: 100%;">
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Equipo</th>
-        <th>Edad</th>
-        <th>Posición</th>
-        <th>Minutos</th>
-        <th>Rating</th>
-        <th>Adaptación</th>
-        <th>Factor liga</th>
-        <th>Weighted Rating</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
 
   <script>
     const supabaseClient = supabase.createClient(
@@ -65,6 +554,7 @@
 
     let processedPlayers = [];
     let currentPlayers = [];
+    let displayedPlayers = [];
 
     function toNumber(v) {
       if (v === null || v === undefined || v === "") return 0;
@@ -91,13 +581,109 @@
       return "";
     }
 
+    function normalizePositionGroup(positionRaw) {
+      const p = String(positionRaw || "").toUpperCase();
+
+      if (p.includes("GK")) return "GK";
+      if (p.includes("RWB") || p.includes("LWB")) return "RWB_LWB";
+      if (p.includes("RB") || p.includes("LB")) return "RB_LB";
+      if (p.includes("CB")) return "CB";
+      if (p.includes("DMF")) return "DMF";
+      if (p.includes("WG")) return "WG";
+      if (p.includes("AM")) return "AM";
+      if (p.includes("CF")) return "CF";
+      if (p.includes("MC")) return "MC";
+
+      return "OTHER";
+    }
+
+    function groupLabel(group) {
+      const labels = {
+        GK: "GK",
+        RB_LB: "RB / LB",
+        RWB_LWB: "RWB / LWB",
+        CB: "CB",
+        DMF: "DMF",
+        MC: "MC",
+        WG: "Wingers",
+        AM: "AM",
+        CF: "CF",
+        OTHER: "Other"
+      };
+      return labels[group] || group;
+    }
+
     function calculateWeightedRating(player) {
       const factor = toNumber(player.league_factor);
-      if (!factor) return player.wingback_rating || 0;
-      return Number((toNumber(player.wingback_rating) * factor).toFixed(2));
+      const base = toNumber(player.wingback_rating);
+      if (!factor) return Number(base.toFixed(2));
+      return Number((base * factor).toFixed(2));
+    }
+
+    function getScoreBadgeClass(score) {
+      const n = toNumber(score);
+      if (n >= 8) return "score-badge score-good";
+      if (n >= 6.5) return "score-badge score-mid";
+      return "score-badge score-low";
+    }
+
+    function dedupePlayers(players) {
+      const map = new Map();
+
+      players.forEach(player => {
+        const key = player.player_key || ((String(player.name || "") + "_" + String(player.team || "")).toLowerCase().trim());
+        const current = map.get(key);
+
+        if (!current) {
+          map.set(key, { ...player, player_key: key });
+        } else {
+          const currentScore = toNumber(current.wingback_rating);
+          const newScore = toNumber(player.wingback_rating);
+          if (newScore >= currentScore) {
+            map.set(key, { ...player, player_key: key });
+          }
+        }
+      });
+
+      return Array.from(map.values());
+    }
+
+    function updateKPIs(players) {
+      const total = players.length;
+      const avgRating = total
+        ? (players.reduce((sum, p) => sum + toNumber(p.wingback_rating), 0) / total).toFixed(2)
+        : "0.00";
+      const avgAdaptation = total
+        ? (players.reduce((sum, p) => sum + toNumber(p.adaptation_score), 0) / total).toFixed(2)
+        : "0.00";
+      const topWeighted = total
+        ? Math.max(...players.map(p => calculateWeightedRating(p))).toFixed(2)
+        : "0.00";
+
+      document.getElementById("kpiPlayers").textContent = total;
+      document.getElementById("kpiRating").textContent = avgRating;
+      document.getElementById("kpiAdaptation").textContent = avgAdaptation;
+      document.getElementById("kpiWeighted").textContent = topWeighted;
+    }
+
+    function populateTeamFilter(players) {
+      const select = document.getElementById("filterTeam");
+      const currentValue = select.value;
+
+      const teams = [...new Set(players.map(p => String(p.team || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
+      select.innerHTML = `<option value="">Todos</option>`;
+      teams.forEach(team => {
+        select.innerHTML += `<option value="${team}">${team}</option>`;
+      });
+
+      if (teams.includes(currentValue)) {
+        select.value = currentValue;
+      }
     }
 
     function renderTable(players) {
+      displayedPlayers = players;
       const table = document.querySelector("#playersTable tbody");
       table.innerHTML = "";
 
@@ -106,47 +692,55 @@
 
         table.innerHTML += `
           <tr>
-            <td>${p.name || ""}</td>
-            <td>${p.team || ""}</td>
+            <td class="name-cell">${p.name || ""}</td>
+            <td class="team-cell">${p.team || ""}</td>
             <td>${p.age || ""}</td>
             <td>${p.position || ""}</td>
+            <td>${groupLabel(p.position_group)}</td>
             <td>${p.minutes_played || ""}</td>
-            <td>${p.wingback_rating || ""}</td>
-            <td>${p.adaptation_score || ""}</td>
+            <td><span class="${getScoreBadgeClass(p.wingback_rating)}">${p.wingback_rating || ""}</span></td>
+            <td><span class="${getScoreBadgeClass(p.adaptation_score)}">${p.adaptation_score || ""}</span></td>
             <td>
               <input
+                class="league-factor-input"
                 type="number"
                 step="0.01"
                 min="0"
                 max="1.2"
-                value="${p.league_factor || ""}"
-                placeholder="Ej: 0.92"
+                value="${p.league_factor ?? ""}"
+                placeholder="0.92"
                 onchange="updateLeagueFactor(${index}, this.value)"
-                style="width:80px;"
               />
             </td>
-            <td>${weightedRating}</td>
+            <td class="weighted-cell">${weightedRating}</td>
           </tr>
         `;
       });
+
+      updateKPIs(players);
     }
 
     function updateLeagueFactor(index, value) {
       const numericValue = toNumber(value);
+      if (!displayedPlayers[index]) return;
 
-      if (currentPlayers[index]) {
-        currentPlayers[index].league_factor = numericValue;
-      }
+      const key = displayedPlayers[index].player_key;
 
-      const key = currentPlayers[index]?.player_key;
-      if (key) {
-        const originalIndex = processedPlayers.findIndex(p => p.player_key === key);
-        if (originalIndex !== -1) {
-          processedPlayers[originalIndex].league_factor = numericValue;
+      currentPlayers = currentPlayers.map(player => {
+        if (player.player_key === key) {
+          return { ...player, league_factor: numericValue };
         }
-      }
+        return player;
+      });
 
-      renderTable(currentPlayers);
+      processedPlayers = processedPlayers.map(player => {
+        if (player.player_key === key) {
+          return { ...player, league_factor: numericValue };
+        }
+        return player;
+      });
+
+      applyFilters();
     }
 
     function processExcelRows(json, fileName) {
@@ -240,35 +834,34 @@
           0.60 * interceptionsP90 +
           0.40 * shotsBlockedP90;
 
-        const rating =
-          (
-            0.25 * normalize(progressive, 4) +
-            0.20 * normalize(dribbleImpact, 4) +
-            0.20 * normalize(crossImpact, 2.5) +
-            0.20 * normalize(defensiveActions, 5) +
-            0.15 * normalize(recoveriesProxy, 3)
-          ) * 10;
+        const ratingRaw =
+          0.25 * normalize(progressive, 4) +
+          0.20 * normalize(dribbleImpact, 4) +
+          0.20 * normalize(crossImpact, 2.5) +
+          0.20 * normalize(defensiveActions, 5) +
+          0.15 * normalize(recoveriesProxy, 3);
 
-        const adaptation =
-          (
-            0.22 * normalize(progressive, 6) +
-            0.18 * (0.55 * normalize(dribbles, 5) + 0.45 * normalize(successfulDribblesPct, 70)) +
-            0.18 * (0.60 * normalize(crosses, 6) + 0.40 * normalize(accurateCrossesPct, 40)) +
-            0.20 * (
-              0.35 * normalize(defensiveDuelsWonPct, 75) +
-              0.25 * normalize(defensiveDuelsP90, 8) +
-              0.25 * normalize(interceptionsP90, 3) +
-              0.15 * normalize(padjSlidingTackles, 4)
-            ) +
-            0.12 * (
-              0.70 * normalize(accelerationsP90, 4) +
-              0.30 * normalize(progressive, 6)
-            ) +
-            0.10 * (
-              0.60 * normalize(touchesInBoxP90, 4) +
-              0.40 * normalize(receivedPassesP90, 12)
-            )
-          ) * 10;
+        const adaptationRaw =
+          0.22 * normalize(progressive, 5) +
+          0.18 * (0.55 * normalize(dribbles, 4) + 0.45 * normalize(successfulDribblesPct, 70)) +
+          0.18 * (0.60 * normalize(crosses, 6) + 0.40 * normalize(accurateCrossesPct, 40)) +
+          0.20 * (
+            0.35 * normalize(defensiveDuelsWonPct, 75) +
+            0.25 * normalize(defensiveDuelsP90, 8) +
+            0.25 * normalize(interceptionsP90, 3) +
+            0.15 * normalize(padjSlidingTackles, 4)
+          ) +
+          0.12 * (
+            0.70 * normalize(accelerationsP90, 4) +
+            0.30 * normalize(progressive, 5)
+          ) +
+          0.10 * (
+            0.60 * normalize(touchesInBoxP90, 4) +
+            0.40 * normalize(receivedPassesP90, 12)
+          );
+
+        const rating = 4 + (ratingRaw * 6);
+        const adaptation = 4 + (adaptationRaw * 6);
 
         const player_key = (String(name) + "_" + String(team)).toLowerCase().trim();
 
@@ -278,6 +871,7 @@
           team: team || "",
           age: age || 0,
           position: position || "",
+          position_group: normalizePositionGroup(position),
           minutes_played: minutesPlayed || 0,
           progressive_runs_p90: progressive,
           dribbles_p90: dribbles,
@@ -300,6 +894,17 @@
       });
     }
 
+    function sortPlayers(players) {
+      const sortBy = document.getElementById("sortBy").value;
+
+      return [...players].sort((a, b) => {
+        if (sortBy === "weighted_rating") {
+          return calculateWeightedRating(b) - calculateWeightedRating(a);
+        }
+        return toNumber(b[sortBy]) - toNumber(a[sortBy]);
+      });
+    }
+
     function loadExcel() {
       const file = document.getElementById("excelFile").files[0];
       if (!file) {
@@ -315,8 +920,9 @@
         const sheet = wb.Sheets[wb.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(sheet);
 
-        processedPlayers = processExcelRows(json, file.name);
-        currentPlayers = [...processedPlayers];
+        processedPlayers = dedupePlayers(processExcelRows(json, file.name));
+        currentPlayers = sortPlayers([...processedPlayers]);
+        populateTeamFilter(currentPlayers);
         renderTable(currentPlayers);
       };
 
@@ -363,46 +969,53 @@
     async function loadFromSupabase() {
       const { data, error } = await supabaseClient
         .from("players_app")
-        .select("*")
-        .order("wingback_rating", { ascending: false });
+        .select("*");
 
       if (error) {
-        alert(error.message);
+        alert("Error cargando: " + error.message);
         console.log(error);
         return;
       }
 
-      currentPlayers = data || [];
+      currentPlayers = sortPlayers(dedupePlayers(data || []).map(player => ({
+        ...player,
+        position_group: player.position_group || normalizePositionGroup(player.position)
+      })));
+
+      populateTeamFilter(currentPlayers);
       renderTable(currentPlayers);
     }
 
     function applyFilters() {
-      const positionFilter = document.getElementById("filterPosition").value.trim().toLowerCase();
+      const positionFilter = document.getElementById("filterPosition").value;
+      const teamFilter = document.getElementById("filterTeam").value;
       const ageFilter = toNumber(document.getElementById("filterAge").value);
       const minutesFilter = toNumber(document.getElementById("filterMinutes").value);
       const ratingFilter = toNumber(document.getElementById("filterRating").value);
       const adaptationFilter = toNumber(document.getElementById("filterAdaptation").value);
 
       const filtered = currentPlayers.filter(player => {
-        const matchesPosition = !positionFilter || String(player.position || "").toLowerCase().includes(positionFilter);
+        const matchesPosition = !positionFilter || player.position_group === positionFilter;
+        const matchesTeam = !teamFilter || String(player.team || "") === teamFilter;
         const matchesAge = !ageFilter || toNumber(player.age) <= ageFilter;
         const matchesMinutes = !minutesFilter || toNumber(player.minutes_played) >= minutesFilter;
         const matchesRating = !ratingFilter || toNumber(player.wingback_rating) >= ratingFilter;
         const matchesAdaptation = !adaptationFilter || toNumber(player.adaptation_score) >= adaptationFilter;
 
-        return matchesPosition && matchesAge && matchesMinutes && matchesRating && matchesAdaptation;
+        return matchesPosition && matchesTeam && matchesAge && matchesMinutes && matchesRating && matchesAdaptation;
       });
 
-      renderTable(filtered);
+      renderTable(sortPlayers(filtered));
     }
 
     function clearFilters() {
       document.getElementById("filterPosition").value = "";
+      document.getElementById("filterTeam").value = "";
       document.getElementById("filterAge").value = "";
       document.getElementById("filterMinutes").value = "";
       document.getElementById("filterRating").value = "";
       document.getElementById("filterAdaptation").value = "";
-      renderTable(currentPlayers);
+      renderTable(sortPlayers(currentPlayers));
     }
   </script>
 </body>
