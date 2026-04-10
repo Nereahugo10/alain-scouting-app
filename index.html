@@ -886,32 +886,7 @@
     .replace(/'/g, "&#039;");
 }
 
-let currentSortColumn = null;
-let currentSortDirection = "desc";
 
-function sortTableBy(column) {
-  if (!currentPlayers || !currentPlayers.length) return;
-
-  if (currentSortColumn === column) {
-    currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
-  } else {
-    currentSortColumn = column;
-    currentSortDirection = "desc";
-  }
-
-  const sorted = [...currentPlayers].sort((a, b) => {
-    const aNum = Number(a[column]);
-    const bNum = Number(b[column]);
-
-    if (!isNaN(aNum) && !isNaN(bNum)) {
-      return currentSortDirection === "asc" ? aNum - bNum : bNum - aNum;
-    }
-
-    return 0;
-  });
-
-  renderTable(sorted);
-}
   
 </script>
 
