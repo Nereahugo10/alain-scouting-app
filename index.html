@@ -1310,8 +1310,11 @@ function calculatePlayerRatingFromModel(player, positionGroup) {
         const matchesRating = !ratingFilter || toNumber(player.overall_rating) >= ratingFilter;
         const matchesAdaptation = !adaptationFilter || toNumber(player.adaptation_score) >= adaptationFilter;
 
-        return matchesPosition && matchesTeam && matchesAge && matchesMinutes && matchesRating && matchesAdaptation;
-      });
+        const matchesPosition =
+  !positionFilter ||
+  (Array.isArray(player.position_groups)
+    ? player.position_groups.includes(positionFilter)
+    : normalizePositionGroups(player.position).includes(positionFilter));
 
       renderTable(sortPlayers(filtered));
     }
