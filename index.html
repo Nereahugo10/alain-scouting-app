@@ -803,157 +803,400 @@ function groupLabelsText(positionRaw) {
 
       applyFilters();
     }
+const POSITION_MODELS = {
+  GK: {
+    metrics: [
+      { key: "save_pct", weight: 0.30 },
+      { key: "gk_prevented", weight: 0.25 },
+      { key: "pass_accuracy", weight: 0.15 },
+      { key: "long_pass_accuracy", weight: 0.15 },
+      { key: "def_actions_outside_area", weight: 0.15 }
+    ]
+  },
+  CB: {
+    metrics: [
+      { key: "defensive_duels_won_pct", weight: 0.30 },
+      { key: "aerial_duels_won_pct", weight: 0.25 },
+      { key: "interceptions_p90", weight: 0.20 },
+      { key: "pass_accuracy", weight: 0.15 },
+      { key: "progressive_passes_p90", weight: 0.10 }
+    ]
+  },
+  RB: {
+    metrics: [
+      { key: "defensive_duels_won_pct", weight: 0.25 },
+      { key: "interceptions_p90", weight: 0.15 },
+      { key: "progressive_runs_p90", weight: 0.25 },
+      { key: "crosses_p90", weight: 0.20 },
+      { key: "dribbles_p90", weight: 0.15 }
+    ]
+  },
+  LB: {
+    metrics: [
+      { key: "defensive_duels_won_pct", weight: 0.25 },
+      { key: "interceptions_p90", weight: 0.15 },
+      { key: "progressive_runs_p90", weight: 0.25 },
+      { key: "crosses_p90", weight: 0.20 },
+      { key: "dribbles_p90", weight: 0.15 }
+    ]
+  },
+  DMF: {
+    metrics: [
+      { key: "interceptions_p90", weight: 0.25 },
+      { key: "defensive_duels_won_pct", weight: 0.20 },
+      { key: "pass_accuracy", weight: 0.20 },
+      { key: "forward_pass_accuracy", weight: 0.20 },
+      { key: "progressive_passes_p90", weight: 0.15 }
+    ]
+  },
+  CM: {
+    metrics: [
+      { key: "interceptions_p90", weight: 0.20 },
+      { key: "passes_to_final_third_p90", weight: 0.20 },
+      { key: "progressive_runs_p90", weight: 0.20 },
+      { key: "through_passes_p90", weight: 0.15 },
+      { key: "goals_assists_p90", weight: 0.25 }
+    ]
+  },
+  AMF: {
+    metrics: [
+      { key: "through_passes_p90", weight: 0.25 },
+      { key: "key_passes_p90", weight: 0.25 },
+      { key: "dribbles_p90", weight: 0.20 },
+      { key: "xa_p90", weight: 0.20 },
+      { key: "goals_p90", weight: 0.10 }
+    ]
+  },
+  Winger: {
+    metrics: [
+      { key: "dribbles_p90", weight: 0.25 },
+      { key: "progressive_runs_p90", weight: 0.25 },
+      { key: "crosses_p90", weight: 0.20 },
+      { key: "xa_p90", weight: 0.15 },
+      { key: "goals_p90", weight: 0.15 }
+    ]
+  },
+  CF: {
+    metrics: [
+      { key: "goals_p90", weight: 0.25 },
+      { key: "xg_p90", weight: 0.20 },
+      { key: "efficiency_xg_minus_goals", weight: 0.25, reverse: true },
+      { key: "shots_on_target_pct", weight: 0.15 },
+      { key: "touches_in_box_p90", weight: 0.15 }
+    ]
+  }
+};
 
-    function processExcelRows(json, fileName) {
-      return json.map(p => {
-        const name = getValue(p, ["Name", "name", "Player", "Player name"]);
-        const team = getValue(p, ["Team", "team", "Squad"]);
-        const age = toNumber(getValue(p, ["Age", "age"]));
-        const position = getValue(p, ["Position", "position", "Pos"]);
-        const minutesPlayed = toNumber(getValue(p, ["minuges played", "Minutes played", "minutes played"]));
+function normalizePositionGroups(positionRaw) {
+  const p = String(positionRaw || "").toUpperCase().trim();
+  if (!p) return ["OTHER"];
 
-        const progressive = toNumber(getValue(p, [
-          "Progresive Runs 90",
-          "Progressive runs per 90",
-          "progressive_runs_p90"
-        ]));
+  const parts = p.split(",").map(x => x.trim());
+  const groups = new Set();
 
-        const dribbles = toNumber(getValue(p, [
-          "dribblies_p90",
-          "Dribbles per 90",
-          "dribbles_p90"
-        ]));
+  for (const part of parts) {
+    if (part === "GK" || part.includes("GK")) groups.add("GK");
+    if (part.includes("RB") || part.includes("RWB")) groups.add("RB");
+    if (part.includes("LB") || part.includes("LWB")) groups.add("LB");
+    if (part.includes("CB")) groups.add("CB");
+    if (part.includes("DMF")) groups.add("DMF");
+    if (part.includes("CM")) groups.add("CM");
+    if (part.includes("AMF")) groups.add("AMF");
 
-        const successfulDribblesPct = toNumber(getValue(p, [
-          "successful_dribbles_pct",
-          "Successful dribbles, %",
-          "Successful dribbles %"
-        ]));
-
-        const crosses = toNumber(getValue(p, [
-          "crosses_p90",
-          "Crosses per 90"
-        ]));
-
-        const accurateCrossesPct = toNumber(getValue(p, [
-          "accurate_crosses_pct",
-          "Accurate crosses, %",
-          "Accurate crosses %"
-        ]));
-
-        const defensiveDuelsP90 = toNumber(getValue(p, [
-          "defensive_duels_p90",
-          "Defensive duels per 90"
-        ]));
-
-        const defensiveDuelsWonPct = toNumber(getValue(p, [
-          "defensive_duels_won_pct",
-          "Defensive duels won, %",
-          "Defensive duels won %"
-        ]));
-
-        const interceptionsP90 = toNumber(getValue(p, [
-          "interceptions_p90",
-          "Interceptions per 90"
-        ]));
-
-        const padjSlidingTackles = toNumber(getValue(p, [
-          "padj_sliding_tackles",
-          "PAdj Sliding tackles"
-        ]));
-
-        const shotsBlockedP90 = toNumber(getValue(p, [
-          "shots_blocked_p90",
-          "Shots blocked per 90"
-        ]));
-
-        const accelerationsP90 = toNumber(getValue(p, [
-          "accelerations_p90",
-          "Accelerations per 90"
-        ]));
-
-        const touchesInBoxP90 = toNumber(getValue(p, [
-          "touches_in_box_p90",
-          "Touches in box per 90"
-        ]));
-
-        const receivedPassesP90 = toNumber(getValue(p, [
-          "received_passes_p90",
-          "Received passes per 90"
-        ]));
-
-        const dribbleImpact = dribbles * (successfulDribblesPct / 100);
-        const crossImpact = crosses * (accurateCrossesPct / 100);
-
-        const defensiveActions =
-          0.35 * (defensiveDuelsWonPct / 100) +
-          0.25 * defensiveDuelsP90 +
-          0.20 * interceptionsP90 +
-          0.20 * padjSlidingTackles;
-
-        const recoveriesProxy =
-          0.60 * interceptionsP90 +
-          0.40 * shotsBlockedP90;
-
-        const ratingRaw =
-          0.25 * normalize(progressive, 4) +
-          0.20 * normalize(dribbleImpact, 4) +
-          0.20 * normalize(crossImpact, 2.5) +
-          0.20 * normalize(defensiveActions, 5) +
-          0.15 * normalize(recoveriesProxy, 3);
-
-        const adaptationRaw =
-          0.22 * normalize(progressive, 5) +
-          0.18 * (0.55 * normalize(dribbles, 4) + 0.45 * normalize(successfulDribblesPct, 70)) +
-          0.18 * (0.60 * normalize(crosses, 6) + 0.40 * normalize(accurateCrossesPct, 40)) +
-          0.20 * (
-            0.35 * normalize(defensiveDuelsWonPct, 75) +
-            0.25 * normalize(defensiveDuelsP90, 8) +
-            0.25 * normalize(interceptionsP90, 3) +
-            0.15 * normalize(padjSlidingTackles, 4)
-          ) +
-          0.12 * (
-            0.70 * normalize(accelerationsP90, 4) +
-            0.30 * normalize(progressive, 5)
-          ) +
-          0.10 * (
-            0.60 * normalize(touchesInBoxP90, 4) +
-            0.40 * normalize(receivedPassesP90, 12)
-          );
-
-        const rating = 4 + (ratingRaw * 6);
-        const adaptation = 4 + (adaptationRaw * 6);
-
-        const player_key = (String(name) + "_" + String(team)).toLowerCase().trim();
-
-        return {
-          player_key,
-          name: name || "",
-          team: team || "",
-          age: age || 0,
-          position: position || "",
-          position_group: normalizePositionGroup(position),
-          minutes_played: minutesPlayed || 0,
-          progressive_runs_p90: progressive,
-          dribbles_p90: dribbles,
-          successful_dribbles_pct: successfulDribblesPct,
-          crosses_p90: crosses,
-          accurate_crosses_pct: accurateCrossesPct,
-          defensive_duels_p90: defensiveDuelsP90,
-          defensive_duels_won_pct: defensiveDuelsWonPct,
-          interceptions_p90: interceptionsP90,
-          padj_sliding_tackles: padjSlidingTackles,
-          shots_blocked_p90: shotsBlockedP90,
-          accelerations_p90: accelerationsP90,
-          touches_in_box_p90: touchesInBoxP90,
-          received_passes_p90: receivedPassesP90,
-          wingback_rating: Number(rating.toFixed(2)),
-          adaptation_score: Number(adaptation.toFixed(2)),
-          league_factor: 1.00,
-          source_file: fileName
-        };
-      });
+    if (
+      part.includes("WG") ||
+      part === "LW" ||
+      part === "RW" ||
+      part.includes("LWB") ||
+      part.includes("RWB")
+    ) {
+      groups.add("Winger");
     }
+
+    if (part.includes("CF")) groups.add("CF");
+  }
+
+  return groups.size ? Array.from(groups) : ["OTHER"];
+}
+
+function normalizePositionGroup(positionRaw) {
+  const groups = normalizePositionGroups(positionRaw);
+
+  if (groups.includes("GK")) return "GK";
+  if (groups.includes("CF")) return "CF";
+  if (groups.includes("AMF")) return "AMF";
+  if (groups.includes("CM")) return "CM";
+  if (groups.includes("DMF")) return "DMF";
+  if (groups.includes("CB")) return "CB";
+  if (groups.includes("RB")) return "RB";
+  if (groups.includes("LB")) return "LB";
+  if (groups.includes("Winger")) return "Winger";
+
+  return "OTHER";
+}
+
+function calculatePlayerRatingFromModel(player, positionGroup) {
+  const model = POSITION_MODELS[positionGroup];
+  if (!model) return null;
+
+  let total = 0;
+  let totalWeight = 0;
+
+  for (const metric of model.metrics) {
+    let value = toNumber(player[metric.key]);
+
+    if (value === null || value === undefined || isNaN(value)) continue;
+
+    if (metric.reverse) value = -value;
+
+    total += value * metric.weight;
+    totalWeight += metric.weight;
+  }
+
+  if (!totalWeight) return null;
+
+  const score = total / totalWeight;
+
+  // escala simple provisional 4-10
+  return Number((4 + Math.max(0, Math.min(1, normalize(score, 1))) * 6).toFixed(2));
+}
+    function processExcelRows(json, fileName) {
+  return json.map(p => {
+    const name = getValue(p, ["Name", "name", "Player", "Player name"]);
+    const team = getValue(p, ["Team", "team", "Squad"]);
+    const age = toNumber(getValue(p, ["Age", "age"]));
+    const position = getValue(p, ["Position", "position", "Pos"]);
+    const minutesPlayed = toNumber(getValue(p, ["minuges played", "Minutes played", "minutes played"]));
+
+    // MÉTRICAS YA EXISTENTES
+    const progressive = toNumber(getValue(p, [
+      "Progresive Runs 90",
+      "Progressive runs per 90",
+      "progressive_runs_p90"
+    ]));
+
+    const dribbles = toNumber(getValue(p, [
+      "dribblies_p90",
+      "Dribbles per 90",
+      "dribbles_p90"
+    ]));
+
+    const successfulDribblesPct = toNumber(getValue(p, [
+      "successful_dribbles_pct",
+      "Successful dribbles, %",
+      "Successful dribbles %"
+    ]));
+
+    const crosses = toNumber(getValue(p, [
+      "crosses_p90",
+      "Crosses per 90"
+    ]));
+
+    const accurateCrossesPct = toNumber(getValue(p, [
+      "accurate_crosses_pct",
+      "Accurate crosses, %",
+      "Accurate crosses %"
+    ]));
+
+    const defensiveDuelsP90 = toNumber(getValue(p, [
+      "defensive_duels_p90",
+      "Defensive duels per 90"
+    ]));
+
+    const defensiveDuelsWonPct = toNumber(getValue(p, [
+      "defensive_duels_won_pct",
+      "Defensive duels won, %",
+      "Defensive duels won %"
+    ]));
+
+    const interceptionsP90 = toNumber(getValue(p, [
+      "interceptions_p90",
+      "Interceptions per 90"
+    ]));
+
+    const padjSlidingTackles = toNumber(getValue(p, [
+      "padj_sliding_tackles",
+      "PAdj Sliding tackles"
+    ]));
+
+    const shotsBlockedP90 = toNumber(getValue(p, [
+      "shots_blocked_p90",
+      "Shots blocked per 90"
+    ]));
+
+    const accelerationsP90 = toNumber(getValue(p, [
+      "accelerations_p90",
+      "Accelerations per 90"
+    ]));
+
+    const touchesInBoxP90 = toNumber(getValue(p, [
+      "touches_in_box_p90",
+      "Touches in box per 90"
+    ]));
+
+    const receivedPassesP90 = toNumber(getValue(p, [
+      "received_passes_p90",
+      "Received passes per 90"
+    ]));
+
+    // MÉTRICAS NUEVAS PARA TODAS LAS POSICIONES
+    const passAccuracy = toNumber(getValue(p, [
+      "pass_accuracy",
+      "Pass accuracy, %",
+      "Pass accuracy %"
+    ]));
+
+    const longPassAccuracy = toNumber(getValue(p, [
+      "long_pass_accuracy",
+      "Long passes accuracy, %",
+      "Long passes accuracy %"
+    ]));
+
+    const forwardPassAccuracy = toNumber(getValue(p, [
+      "forward_pass_accuracy",
+      "Forward passes accuracy, %",
+      "Forward passes accuracy %"
+    ]));
+
+    const progressivePassesP90 = toNumber(getValue(p, [
+      "progressive_passes_p90",
+      "Progressive passes per 90"
+    ]));
+
+    const aerialDuelsWonPct = toNumber(getValue(p, [
+      "aerial_duels_won_pct",
+      "Aerial duels won, %",
+      "Aerial duels won %"
+    ]));
+
+    const passesToFinalThirdP90 = toNumber(getValue(p, [
+      "passes_to_final_third_p90",
+      "Passes to final third per 90"
+    ]));
+
+    const throughPassesP90 = toNumber(getValue(p, [
+      "through_passes_p90",
+      "Through passes per 90"
+    ]));
+
+    const keyPassesP90 = toNumber(getValue(p, [
+      "key_passes_p90",
+      "Key passes per 90"
+    ]));
+
+    const xAP90 = toNumber(getValue(p, [
+      "xA per 90",
+      "xa_p90",
+      "xA"
+    ]));
+
+    const goalsP90 = toNumber(getValue(p, [
+      "Goals per 90",
+      "goals_p90"
+    ]));
+
+    const assistsP90 = toNumber(getValue(p, [
+      "Assists per 90",
+      "assists_p90"
+    ]));
+
+    const xGP90 = toNumber(getValue(p, [
+      "xG per 90",
+      "xg_p90"
+    ]));
+
+    const shotsOnTargetPct = toNumber(getValue(p, [
+      "Shots on target, %",
+      "Shots on target %",
+      "shots_on_target_pct"
+    ]));
+
+    const savePct = toNumber(getValue(p, [
+      "Save %",
+      "Saves, %",
+      "save_pct"
+    ]));
+
+    const gkPrevented = toNumber(getValue(p, [
+      "xG conceded - Goals conceded",
+      "gk_prevented"
+    ]));
+
+    const defActionsOutsideArea = toNumber(getValue(p, [
+      "Defensive actions outside area per 90",
+      "def_actions_outside_area"
+    ]));
+
+    // DERIVADAS
+    const goalsAssistsP90 = goalsP90 + assistsP90;
+    const efficiencyXgMinusGoals = xGP90 - goalsP90;
+
+    const player_key = (String(name) + "_" + String(team)).toLowerCase().trim();
+    const positionGroups = normalizePositionGroups(position);
+
+    const playerBase = {
+      player_key,
+      name: name || "",
+      team: team || "",
+      age: age || 0,
+      position: position || "",
+      position_groups: positionGroups,
+      position_group: normalizePositionGroup(position),
+      minutes_played: minutesPlayed || 0,
+
+      progressive_runs_p90: progressive,
+      dribbles_p90: dribbles,
+      successful_dribbles_pct: successfulDribblesPct,
+      crosses_p90: crosses,
+      accurate_crosses_pct: accurateCrossesPct,
+      defensive_duels_p90: defensiveDuelsP90,
+      defensive_duels_won_pct: defensiveDuelsWonPct,
+      interceptions_p90: interceptionsP90,
+      padj_sliding_tackles: padjSlidingTackles,
+      shots_blocked_p90: shotsBlockedP90,
+      accelerations_p90: accelerationsP90,
+      touches_in_box_p90: touchesInBoxP90,
+      received_passes_p90: receivedPassesP90,
+
+      pass_accuracy: passAccuracy,
+      long_pass_accuracy: longPassAccuracy,
+      forward_pass_accuracy: forwardPassAccuracy,
+      progressive_passes_p90: progressivePassesP90,
+      aerial_duels_won_pct: aerialDuelsWonPct,
+      passes_to_final_third_p90: passesToFinalThirdP90,
+      through_passes_p90: throughPassesP90,
+      key_passes_p90: keyPassesP90,
+      xa_p90: xAP90,
+      goals_p90: goalsP90,
+      assists_p90: assistsP90,
+      goals_assists_p90: goalsAssistsP90,
+      xg_p90: xGP90,
+      efficiency_xg_minus_goals: efficiencyXgMinusGoals,
+      shots_on_target_pct: shotsOnTargetPct,
+
+      save_pct: savePct,
+      gk_prevented: gkPrevented,
+      def_actions_outside_area: defActionsOutsideArea,
+
+      league_factor: 1.00,
+      source_file: fileName
+    };
+
+    const ratings = {};
+    for (const group of positionGroups) {
+      ratings[group] = calculatePlayerRatingFromModel(playerBase, group);
+    }
+
+    const numericRatings = Object.values(ratings).filter(v => typeof v === "number" && !isNaN(v));
+    const overallRating = numericRatings.length ? Math.max(...numericRatings) : 0;
+
+    return {
+      ...playerBase,
+      ratings,
+      overall_rating: Number(overallRating.toFixed(2))
+    };
+  });
+}
 
     function sortPlayers(players) {
       const sortBy = document.getElementById("sortBy").value;
@@ -1056,11 +1299,15 @@ function groupLabelsText(positionRaw) {
       const adaptationFilter = toNumber(document.getElementById("filterAdaptation").value);
 
       const filtered = currentPlayers.filter(player => {
-        const matchesPosition = !positionFilter || player.position_group === positionFilter;
+        const matchesPosition =
+  !positionFilter ||
+  (Array.isArray(player.position_groups)
+    ? player.position_groups.includes(positionFilter)
+    : normalizePositionGroups(player.position).includes(positionFilter));
         const matchesTeam = !teamFilter || String(player.team || "") === teamFilter;
         const matchesAge = !ageFilter || toNumber(player.age) <= ageFilter;
         const matchesMinutes = !minutesFilter || toNumber(player.minutes_played) >= minutesFilter;
-        const matchesRating = !ratingFilter || toNumber(player.wingback_rating) >= ratingFilter;
+        const matchesRating = !ratingFilter || toNumber(player.overall_rating) >= ratingFilter;
         const matchesAdaptation = !adaptationFilter || toNumber(player.adaptation_score) >= adaptationFilter;
 
         return matchesPosition && matchesTeam && matchesAge && matchesMinutes && matchesRating && matchesAdaptation;
