@@ -674,12 +674,21 @@ function groupLabelsText(positionRaw) {
   return normalizePositionGroups(positionRaw).map(groupLabel).join(" / ");
 }
 
-    function calculateWeightedRating(player) {
-      const factor = toNumber(player.league_factor);
-      const base = toNumber(player.wingback_rating);
-      if (!factor) return Number(base.toFixed(2));
-      return Number((base * factor).toFixed(2));
-    }
+    function calculateWeightedRating(player, selectedPosition) {
+  const factor = toNumber(player.league_factor);
+
+  let base;
+
+  if (selectedPosition && player.ratings?.[selectedPosition]) {
+    base = player.ratings[selectedPosition];
+  } else {
+    base = player.overall_rating;
+  }
+
+  if (!factor) return Number(base.toFixed(2));
+
+  return Number((base * factor).toFixed(2));
+}
 
     function getScoreBadgeClass(score) {
       const n = toNumber(score);
@@ -806,82 +815,82 @@ function groupLabelsText(positionRaw) {
 const POSITION_MODELS = {
   GK: {
     metrics: [
-      { key: "save_pct", weight: 0.30 },
-      { key: "gk_prevented", weight: 0.25 },
+      { key: "save_pct", weight: 0.40 },
+      { key: "gk_prevented", weight: 0.30 },
       { key: "pass_accuracy", weight: 0.15 },
-      { key: "long_pass_accuracy", weight: 0.15 },
-      { key: "def_actions_outside_area", weight: 0.15 }
+      { key: "long_pass_accuracy", weight: 0.05 },
+      { key: "def_actions_outside_area", weight: 0.10 }
     ]
   },
   CB: {
     metrics: [
-      { key: "defensive_duels_won_pct", weight: 0.30 },
-      { key: "aerial_duels_won_pct", weight: 0.25 },
+      { key: "defensive_duels_won_pct", weight: 0.35 },
+      { key: "aerial_duels_won_pct", weight: 0.15 },
       { key: "interceptions_p90", weight: 0.20 },
-      { key: "pass_accuracy", weight: 0.15 },
+      { key: "pass_accuracy", weight: 0.20 },
       { key: "progressive_passes_p90", weight: 0.10 }
     ]
   },
   RB: {
     metrics: [
-      { key: "defensive_duels_won_pct", weight: 0.25 },
-      { key: "interceptions_p90", weight: 0.15 },
+      { key: "defensive_duels_won_pct", weight: 0.20 },
+      { key: "interceptions_p90", weight: 0.10 },
       { key: "progressive_runs_p90", weight: 0.25 },
-      { key: "crosses_p90", weight: 0.20 },
-      { key: "dribbles_p90", weight: 0.15 }
+      { key: "crosses_p90", weight: 0.25 },
+      { key: "dribbles_p90", weight: 0.20 }
     ]
   },
   LB: {
     metrics: [
-      { key: "defensive_duels_won_pct", weight: 0.25 },
-      { key: "interceptions_p90", weight: 0.15 },
+      { key: "defensive_duels_won_pct", weight: 0.20 },
+      { key: "interceptions_p90", weight: 0.10 },
       { key: "progressive_runs_p90", weight: 0.25 },
-      { key: "crosses_p90", weight: 0.20 },
-      { key: "dribbles_p90", weight: 0.15 }
+      { key: "crosses_p90", weight: 0.25 },
+      { key: "dribbles_p90", weight: 0.20 }
     ]
   },
   DMF: {
     metrics: [
       { key: "interceptions_p90", weight: 0.25 },
-      { key: "defensive_duels_won_pct", weight: 0.20 },
+      { key: "defensive_duels_won_pct", weight: 0.25 },
       { key: "pass_accuracy", weight: 0.20 },
       { key: "forward_pass_accuracy", weight: 0.20 },
-      { key: "progressive_passes_p90", weight: 0.15 }
+      { key: "progressive_passes_p90", weight: 0.10 }
     ]
   },
   CM: {
     metrics: [
-      { key: "interceptions_p90", weight: 0.20 },
-      { key: "passes_to_final_third_p90", weight: 0.20 },
-      { key: "progressive_runs_p90", weight: 0.20 },
-      { key: "through_passes_p90", weight: 0.15 },
+      { key: "interceptions_p90", weight: 0.15 },
+      { key: "passes_to_final_third_p90", weight: 0.25 },
+      { key: "progressive_runs_p90", weight: 0.10 },
+      { key: "through_passes_p90", weight: 0.20 },
       { key: "goals_assists_p90", weight: 0.25 }
     ]
   },
   AMF: {
     metrics: [
-      { key: "through_passes_p90", weight: 0.25 },
-      { key: "key_passes_p90", weight: 0.25 },
-      { key: "dribbles_p90", weight: 0.20 },
+      { key: "through_passes_p90", weight: 0.20 },
+      { key: "key_passes_p90", weight: 0.30 },
+      { key: "dribbles_p90", weight: 0.15 },
       { key: "xa_p90", weight: 0.20 },
-      { key: "goals_p90", weight: 0.10 }
+      { key: "goals_p90", weight: 0.15 }
     ]
   },
   Winger: {
     metrics: [
       { key: "dribbles_p90", weight: 0.25 },
       { key: "progressive_runs_p90", weight: 0.25 },
-      { key: "crosses_p90", weight: 0.20 },
-      { key: "xa_p90", weight: 0.15 },
-      { key: "goals_p90", weight: 0.15 }
+      { key: "crosses_p90", weight: 0.10 },
+      { key: "xa_p90", weight: 0.20 },
+      { key: "goals_p90", weight: 0.20 }
     ]
   },
   CF: {
     metrics: [
-      { key: "goals_p90", weight: 0.25 },
-      { key: "xg_p90", weight: 0.20 },
-      { key: "efficiency_xg_minus_goals", weight: 0.25, reverse: true },
-      { key: "shots_on_target_pct", weight: 0.15 },
+      { key: "goals_p90", weight: 0.35 },
+      { key: "xg_p90", weight: 0.10 },
+      { key: "efficiency_xg_minus_goals", weight: 0.30, reverse: true },
+      { key: "shots_on_target_pct", weight: 0.10 },
       { key: "touches_in_box_p90", weight: 0.15 }
     ]
   }
@@ -1202,12 +1211,9 @@ function calculatePlayerRatingFromModel(player, positionGroup) {
       const sortBy = document.getElementById("sortBy").value;
 
       return [...players].sort((a, b) => {
-        if (sortBy === "weighted_rating") {
-          return calculateWeightedRating(b) - calculateWeightedRating(a);
-        }
-        return toNumber(b[sortBy]) - toNumber(a[sortBy]);
-      });
-    }
+       if (sortBy === "weighted_rating") {
+  return toNumber(b.overall_rating) - toNumber(a.overall_rating);
+}
 
     function loadExcel() {
       const file = document.getElementById("excelFile").files[0];
