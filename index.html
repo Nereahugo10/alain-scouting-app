@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Al Ain Scouting App</title>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
   <style>
     :root {
       --bg: #f5f6fb;
@@ -23,9 +25,7 @@
       --radius: 18px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -354,6 +354,29 @@
       text-align: right;
     }
 
+    .message-box {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      display: none;
+    }
+
+    .message-info {
+      display: block;
+      background: #eef4ff;
+      border: 1px solid #d7e6ff;
+      color: #254a8a;
+    }
+
+    .message-error {
+      display: block;
+      background: #fff1f1;
+      border: 1px solid #ffd3d3;
+      color: #9f1d1d;
+    }
+
     @media (max-width: 1280px) {
       .filters-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -405,8 +428,8 @@
     <section class="hero">
       <h1>Al Ain Scouting Dashboard</h1>
       <p>
-        Plataforma visual de recruitment para analizar carrileros y otros perfiles:
-        carga de Excel, rating automático, adaptación al sistema, weighted rating,
+        Plataforma visual de recruitment para analizar perfiles por posición:
+        carga de Excel, rating automático por rol, weighted rating,
         filtros avanzados y base consolidada en Supabase.
       </p>
       <div class="hero-badge">Scouting • Data • Recruitment • Al Ain Model</div>
@@ -420,6 +443,8 @@
       <button class="btn btn-secondary" onclick="saveToSupabase()">Guardar en Supabase</button>
       <button class="btn btn-gold" onclick="loadFromSupabase()">Cargar desde Supabase</button>
     </section>
+
+    <div id="messageBox" class="message-box"></div>
 
     <section class="cards">
       <div class="card">
@@ -456,13 +481,13 @@
           <select id="filterPosition">
             <option value="">Todas</option>
             <option value="GK">GK</option>
-            <option value="RB_LB">RB / LB</option>
-            <option value="RWB_LWB">RWB / LWB</option>
+            <option value="RB">RB</option>
+            <option value="LB">LB</option>
             <option value="CB">CB</option>
             <option value="DMF">DMF</option>
-            <option value="MC">MC</option>
-            <option value="WG">Wingers</option>
-            <option value="AM">AM</option>
+            <option value="CM">CM</option>
+            <option value="AMF">AMF</option>
+            <option value="Winger">Winger</option>
             <option value="CF">CF</option>
           </select>
         </div>
@@ -498,7 +523,7 @@
           <label>Ordenar por</label>
           <select id="sortBy">
             <option value="weighted_rating">Weighted Rating</option>
-            <option value="wingback_rating">Rating</option>
+            <option value="overall_rating">Rating</option>
             <option value="adaptation_score">Adaptación</option>
             <option value="minutes_played">Minutos</option>
             <option value="age">Edad</option>
@@ -556,13 +581,21 @@
     let currentPlayers = [];
     let displayedPlayers = [];
 
+    function showMessage(text, type = "info") {
+      const box = document.getElementById("messageBox");
+      box.textContent = text;
+      box.className = "message-box " + (type === "error" ? "message-error" : "message-info");
+    }
+
+    function clearMessage() {
+      const box = document.getElementById("messageBox");
+      box.textContent = "";
+      box.className = "message-box";
+    }
+
     function toNumber(v) {
       if (v === null || v === undefined || v === "") return 0;
       return Number(String(v).replace(",", ".")) || 0;
-    }
-
-    function normalize(v, max) {
-      return Math.min(1, toNumber(v) / max);
     }
 
     function getValue(obj, possibleKeys) {
@@ -573,122 +606,269 @@
       }
 
       const realKeys = Object.keys(obj);
-for (const wanted of possibleKeys) {
-  const found = realKeys.find(
-    k => k.trim().toLowerCase() === wanted.trim().toLowerCase()
-  );
-  if (found) return obj[found];
-}
+      for (const wanted of possibleKeys) {
+        const found = realKeys.find(
+          k => k.trim().toLowerCase() === wanted.trim().toLowerCase()
+        );
+        if (found) return obj[found];
+      }
 
-return "";
-}
-
-function normalizePositionGroups(positionRaw) {
-  const p = String(positionRaw || "").toUpperCase().trim();
-
-  if (!p) return ["OTHER"];
-
-  const parts = p.split(",").map(x => x.trim());
-  const groups = new Set();
-
-  for (const part of parts) {
-    if (part === "GK" || part.includes("GK")) {
-      groups.add("GK");
+      return "";
     }
 
-    if (part.includes("RB") || part.includes("RWB")) {
-      groups.add("RB");
+    function normalizeValue(value, min, max, reverse = false) {
+      if (max === min) return 0.5;
+      let norm = (value - min) / (max - min);
+      norm = Math.max(0, Math.min(1, norm));
+      return reverse ? 1 - norm : norm;
     }
 
-    if (part.includes("LB") || part.includes("LWB")) {
-      groups.add("LB");
+    function normalizePositionGroups(positionRaw) {
+      const p = String(positionRaw || "").toUpperCase().trim();
+      if (!p) return ["OTHER"];
+
+      const parts = p.split(",").map(x => x.trim());
+      const groups = new Set();
+
+      for (const part of parts) {
+        if (part === "GK" || part.includes("GK")) groups.add("GK");
+        if (part.includes("RB") || part.includes("RWB")) groups.add("RB");
+        if (part.includes("LB") || part.includes("LWB")) groups.add("LB");
+        if (part.includes("CB")) groups.add("CB");
+        if (part.includes("DMF")) groups.add("DMF");
+        if (part.includes("CM")) groups.add("CM");
+        if (part.includes("AMF")) groups.add("AMF");
+
+        if (
+          part.includes("WG") ||
+          part === "LW" ||
+          part === "RW" ||
+          part.includes("LWB") ||
+          part.includes("RWB")
+        ) {
+          groups.add("Winger");
+        }
+
+        if (part.includes("CF")) groups.add("CF");
+      }
+
+      return groups.size ? Array.from(groups) : ["OTHER"];
     }
 
-    if (part.includes("CB")) {
-      groups.add("CB");
+    function normalizePositionGroup(positionRaw) {
+      const groups = normalizePositionGroups(positionRaw);
+
+      if (groups.includes("GK")) return "GK";
+      if (groups.includes("CF")) return "CF";
+      if (groups.includes("AMF")) return "AMF";
+      if (groups.includes("CM")) return "CM";
+      if (groups.includes("DMF")) return "DMF";
+      if (groups.includes("CB")) return "CB";
+      if (groups.includes("RB")) return "RB";
+      if (groups.includes("LB")) return "LB";
+      if (groups.includes("Winger")) return "Winger";
+
+      return "OTHER";
     }
 
-    if (part.includes("DMF")) {
-      groups.add("DMF");
+    function groupLabel(group) {
+      const labels = {
+        GK: "GK",
+        RB: "RB",
+        LB: "LB",
+        CB: "CB",
+        DMF: "DMF",
+        CM: "CM",
+        AMF: "AMF",
+        Winger: "Winger",
+        CF: "CF",
+        OTHER: "Other"
+      };
+      return labels[group] || group;
     }
 
-    if (part.includes("CM")) {
-      groups.add("CM");
+    const POSITION_MODELS = {
+      GK: {
+        metrics: [
+          { key: "save_pct", weight: 0.40 },
+          { key: "gk_prevented", weight: 0.30 },
+          { key: "pass_accuracy", weight: 0.15 },
+          { key: "long_pass_accuracy", weight: 0.05 },
+          { key: "def_actions_outside_area", weight: 0.10 }
+        ]
+      },
+      CB: {
+        metrics: [
+          { key: "defensive_duels_won_pct", weight: 0.35 },
+          { key: "aerial_duels_won_pct", weight: 0.15 },
+          { key: "interceptions_p90", weight: 0.20 },
+          { key: "pass_accuracy", weight: 0.20 },
+          { key: "progressive_passes_p90", weight: 0.10 }
+        ]
+      },
+      RB: {
+        metrics: [
+          { key: "defensive_duels_won_pct", weight: 0.20 },
+          { key: "interceptions_p90", weight: 0.10 },
+          { key: "progressive_runs_p90", weight: 0.25 },
+          { key: "crosses_p90", weight: 0.25 },
+          { key: "dribbles_p90", weight: 0.20 }
+        ]
+      },
+      LB: {
+        metrics: [
+          { key: "defensive_duels_won_pct", weight: 0.20 },
+          { key: "interceptions_p90", weight: 0.10 },
+          { key: "progressive_runs_p90", weight: 0.25 },
+          { key: "crosses_p90", weight: 0.25 },
+          { key: "dribbles_p90", weight: 0.20 }
+        ]
+      },
+      DMF: {
+        metrics: [
+          { key: "interceptions_p90", weight: 0.25 },
+          { key: "defensive_duels_won_pct", weight: 0.25 },
+          { key: "pass_accuracy", weight: 0.20 },
+          { key: "forward_pass_accuracy", weight: 0.20 },
+          { key: "progressive_passes_p90", weight: 0.10 }
+        ]
+      },
+      CM: {
+        metrics: [
+          { key: "interceptions_p90", weight: 0.15 },
+          { key: "passes_to_final_third_p90", weight: 0.25 },
+          { key: "progressive_runs_p90", weight: 0.10 },
+          { key: "through_passes_p90", weight: 0.20 },
+          { key: "goals_assists_p90", weight: 0.30 }
+        ]
+      },
+      AMF: {
+        metrics: [
+          { key: "through_passes_p90", weight: 0.20 },
+          { key: "key_passes_p90", weight: 0.30 },
+          { key: "dribbles_p90", weight: 0.15 },
+          { key: "xa_p90", weight: 0.20 },
+          { key: "goals_p90", weight: 0.15 }
+        ]
+      },
+      Winger: {
+        metrics: [
+          { key: "dribbles_p90", weight: 0.25 },
+          { key: "progressive_runs_p90", weight: 0.25 },
+          { key: "crosses_p90", weight: 0.10 },
+          { key: "xa_p90", weight: 0.20 },
+          { key: "goals_p90", weight: 0.20 }
+        ]
+      },
+      CF: {
+        metrics: [
+          { key: "goals_p90", weight: 0.35 },
+          { key: "xg_p90", weight: 0.10 },
+          { key: "efficiency_xg_minus_goals", weight: 0.30, reverse: true },
+          { key: "shots_on_target_pct", weight: 0.10 },
+          { key: "touches_in_box_p90", weight: 0.15 }
+        ]
+      }
+    };
+
+    const METRIC_RANGES = {
+      save_pct: { min: 50, max: 85 },
+      gk_prevented: { min: -0.3, max: 0.5 },
+      pass_accuracy: { min: 60, max: 95 },
+      long_pass_accuracy: { min: 30, max: 80 },
+      def_actions_outside_area: { min: 0, max: 2.5 },
+
+      defensive_duels_won_pct: { min: 40, max: 75 },
+      aerial_duels_won_pct: { min: 40, max: 80 },
+      interceptions_p90: { min: 0, max: 10 },
+      progressive_passes_p90: { min: 0, max: 12 },
+
+      progressive_runs_p90: { min: 0, max: 8 },
+      crosses_p90: { min: 0, max: 8 },
+      dribbles_p90: { min: 0, max: 8 },
+
+      forward_pass_accuracy: { min: 55, max: 90 },
+      passes_to_final_third_p90: { min: 0, max: 15 },
+      through_passes_p90: { min: 0, max: 4 },
+      goals_assists_p90: { min: 0, max: 1.2 },
+
+      key_passes_p90: { min: 0, max: 4 },
+      xa_p90: { min: 0, max: 0.6 },
+      goals_p90: { min: 0, max: 1.2 },
+
+      xg_p90: { min: 0, max: 1.2 },
+      efficiency_xg_minus_goals: { min: -0.5, max: 0.5 },
+      shots_on_target_pct: { min: 20, max: 70 },
+      touches_in_box_p90: { min: 0, max: 12 }
+    };
+
+    function calculatePlayerRatingFromModel(player, positionGroup) {
+      const model = POSITION_MODELS[positionGroup];
+      if (!model) return null;
+
+      let total = 0;
+      let totalWeight = 0;
+
+      for (const metric of model.metrics) {
+        const rawValue = toNumber(player[metric.key]);
+        const range = METRIC_RANGES[metric.key];
+        if (!range) continue;
+
+        const normalized = normalizeValue(rawValue, range.min, range.max, metric.reverse);
+        total += normalized * metric.weight;
+        totalWeight += metric.weight;
+      }
+
+      if (!totalWeight) return null;
+
+      const score01 = total / totalWeight;
+      return Number((4 + score01 * 6).toFixed(2));
     }
 
-    if (part.includes("AMF")) {
-      groups.add("AMF");
+    function calculateAdaptationScore(player) {
+      const position = player.position_group;
+
+      if (position === "RB" || position === "LB") {
+        const attack = (
+          normalizeValue(toNumber(player.progressive_runs_p90), 0, 8) * 0.30 +
+          normalizeValue(toNumber(player.dribbles_p90), 0, 8) * 0.20 +
+          normalizeValue(toNumber(player.crosses_p90), 0, 8) * 0.20 +
+          normalizeValue(toNumber(player.defensive_duels_won_pct), 40, 75) * 0.15 +
+          normalizeValue(toNumber(player.interceptions_p90), 0, 10) * 0.15
+        );
+        return Number((4 + attack * 6).toFixed(2));
+      }
+
+      if (position === "CF") {
+        const score = (
+          normalizeValue(toNumber(player.goals_p90), 0, 1.2) * 0.35 +
+          normalizeValue(toNumber(player.xg_p90), 0, 1.2) * 0.15 +
+          normalizeValue(toNumber(player.touches_in_box_p90), 0, 12) * 0.20 +
+          normalizeValue(toNumber(player.shots_on_target_pct), 20, 70) * 0.15 +
+          normalizeValue(toNumber(player.dribbles_p90), 0, 8) * 0.15
+        );
+        return Number((4 + score * 6).toFixed(2));
+      }
+
+      if (position === "DMF") {
+        const score = (
+          normalizeValue(toNumber(player.interceptions_p90), 0, 10) * 0.30 +
+          normalizeValue(toNumber(player.defensive_duels_won_pct), 40, 75) * 0.25 +
+          normalizeValue(toNumber(player.pass_accuracy), 60, 95) * 0.20 +
+          normalizeValue(toNumber(player.forward_pass_accuracy), 55, 90) * 0.15 +
+          normalizeValue(toNumber(player.progressive_passes_p90), 0, 12) * 0.10
+        );
+        return Number((4 + score * 6).toFixed(2));
+      }
+
+      return Number(toNumber(player.overall_rating).toFixed(2));
     }
 
-    if (
-      part.includes("WG") ||
-      part === "LW" ||
-      part === "RW" ||
-      part.includes("LWB") ||
-      part.includes("RWB")
-    ) {
-      groups.add("Winger");
+    function calculateWeightedRating(player) {
+      const factor = toNumber(player.league_factor) || 1;
+      const base = toNumber(player.overall_rating);
+      return Number((base * factor).toFixed(2));
     }
-
-    if (part.includes("CF")) {
-      groups.add("CF");
-    }
-  }
-
-  return groups.size ? Array.from(groups) : ["OTHER"];
-}
-
-function normalizePositionGroup(positionRaw) {
-  const groups = normalizePositionGroups(positionRaw);
-
-  if (groups.includes("GK")) return "GK";
-  if (groups.includes("CF")) return "CF";
-  if (groups.includes("AMF")) return "AMF";
-  if (groups.includes("CM")) return "CM";
-  if (groups.includes("DMF")) return "DMF";
-  if (groups.includes("CB")) return "CB";
-  if (groups.includes("RB")) return "RB";
-  if (groups.includes("LB")) return "LB";
-  if (groups.includes("Winger")) return "Winger";
-
-  return "OTHER";
-}
-
-function groupLabel(group) {
-  const labels = {
-    GK: "GK",
-    RB: "RB",
-    LB: "LB",
-    CB: "CB",
-    DMF: "DMF",
-    CM: "CM",
-    AMF: "AMF",
-    Winger: "Winger",
-    CF: "CF",
-    OTHER: "Other"
-  };
-  return labels[group] || group;
-}
-
-function groupLabelsText(positionRaw) {
-  return normalizePositionGroups(positionRaw).map(groupLabel).join(" / ");
-}
-
-    function calculateWeightedRating(player, selectedPosition) {
-  const factor = toNumber(player.league_factor);
-
-  let base;
-
-  if (selectedPosition && player.ratings?.[selectedPosition]) {
-    base = player.ratings[selectedPosition];
-  } else {
-    base = player.overall_rating;
-  }
-
-  if (!factor) return Number(base.toFixed(2));
-
-  return Number((base * factor).toFixed(2));
-}
 
     function getScoreBadgeClass(score) {
       const n = toNumber(score);
@@ -707,8 +887,8 @@ function groupLabelsText(positionRaw) {
         if (!current) {
           map.set(key, { ...player, player_key: key });
         } else {
-          const currentScore = toNumber(current.wingback_rating);
-          const newScore = toNumber(player.wingback_rating);
+          const currentScore = toNumber(current.overall_rating);
+          const newScore = toNumber(player.overall_rating);
           if (newScore >= currentScore) {
             map.set(key, { ...player, player_key: key });
           }
@@ -720,12 +900,15 @@ function groupLabelsText(positionRaw) {
 
     function updateKPIs(players) {
       const total = players.length;
+
       const avgRating = total
-        ? (players.reduce((sum, p) => sum + toNumber(p.wingback_rating), 0) / total).toFixed(2)
+        ? (players.reduce((sum, p) => sum + toNumber(p.overall_rating), 0) / total).toFixed(2)
         : "0.00";
+
       const avgAdaptation = total
         ? (players.reduce((sum, p) => sum + toNumber(p.adaptation_score), 0) / total).toFixed(2)
         : "0.00";
+
       const topWeighted = total
         ? Math.max(...players.map(p => calculateWeightedRating(p))).toFixed(2)
         : "0.00";
@@ -740,7 +923,8 @@ function groupLabelsText(positionRaw) {
       const select = document.getElementById("filterTeam");
       const currentValue = select.value;
 
-      const teams = [...new Set(players.map(p => String(p.team || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      const teams = [...new Set(players.map(p => String(p.team || "").trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b));
 
       select.innerHTML = `<option value="">Todos</option>`;
       teams.forEach(team => {
@@ -768,7 +952,7 @@ function groupLabelsText(positionRaw) {
             <td>${p.position || ""}</td>
             <td>${groupLabel(p.position_group)}</td>
             <td>${p.minutes_played || ""}</td>
-            <td><span class="${getScoreBadgeClass(p.wingback_rating)}">${p.wingback_rating || ""}</span></td>
+            <td><span class="${getScoreBadgeClass(p.overall_rating)}">${p.overall_rating || ""}</span></td>
             <td><span class="${getScoreBadgeClass(p.adaptation_score)}">${p.adaptation_score || ""}</span></td>
             <td>
               <input
@@ -776,8 +960,8 @@ function groupLabelsText(positionRaw) {
                 type="number"
                 step="0.01"
                 min="0"
-                max="1.2"
-                value="${p.league_factor ?? ""}"
+                max="1.20"
+                value="${p.league_factor ?? 1}"
                 placeholder="0.92"
                 onchange="updateLeagueFactor(${index}, this.value)"
               />
@@ -791,7 +975,7 @@ function groupLabelsText(positionRaw) {
     }
 
     function updateLeagueFactor(index, value) {
-      const numericValue = toNumber(value);
+      const numericValue = toNumber(value) || 1;
       if (!displayedPlayers[index]) return;
 
       const key = displayedPlayers[index].player_key;
@@ -812,436 +996,341 @@ function groupLabelsText(positionRaw) {
 
       applyFilters();
     }
-const POSITION_MODELS = {
-  GK: {
-    metrics: [
-      { key: "save_pct", weight: 0.40 },
-      { key: "gk_prevented", weight: 0.30 },
-      { key: "pass_accuracy", weight: 0.15 },
-      { key: "long_pass_accuracy", weight: 0.05 },
-      { key: "def_actions_outside_area", weight: 0.10 }
-    ]
-  },
-  CB: {
-    metrics: [
-      { key: "defensive_duels_won_pct", weight: 0.35 },
-      { key: "aerial_duels_won_pct", weight: 0.15 },
-      { key: "interceptions_p90", weight: 0.20 },
-      { key: "pass_accuracy", weight: 0.20 },
-      { key: "progressive_passes_p90", weight: 0.10 }
-    ]
-  },
-  RB: {
-    metrics: [
-      { key: "defensive_duels_won_pct", weight: 0.20 },
-      { key: "interceptions_p90", weight: 0.10 },
-      { key: "progressive_runs_p90", weight: 0.25 },
-      { key: "crosses_p90", weight: 0.25 },
-      { key: "dribbles_p90", weight: 0.20 }
-    ]
-  },
-  LB: {
-    metrics: [
-      { key: "defensive_duels_won_pct", weight: 0.20 },
-      { key: "interceptions_p90", weight: 0.10 },
-      { key: "progressive_runs_p90", weight: 0.25 },
-      { key: "crosses_p90", weight: 0.25 },
-      { key: "dribbles_p90", weight: 0.20 }
-    ]
-  },
-  DMF: {
-    metrics: [
-      { key: "interceptions_p90", weight: 0.25 },
-      { key: "defensive_duels_won_pct", weight: 0.25 },
-      { key: "pass_accuracy", weight: 0.20 },
-      { key: "forward_pass_accuracy", weight: 0.20 },
-      { key: "progressive_passes_p90", weight: 0.10 }
-    ]
-  },
-  CM: {
-    metrics: [
-      { key: "interceptions_p90", weight: 0.15 },
-      { key: "passes_to_final_third_p90", weight: 0.25 },
-      { key: "progressive_runs_p90", weight: 0.10 },
-      { key: "through_passes_p90", weight: 0.20 },
-      { key: "goals_assists_p90", weight: 0.25 }
-    ]
-  },
-  AMF: {
-    metrics: [
-      { key: "through_passes_p90", weight: 0.20 },
-      { key: "key_passes_p90", weight: 0.30 },
-      { key: "dribbles_p90", weight: 0.15 },
-      { key: "xa_p90", weight: 0.20 },
-      { key: "goals_p90", weight: 0.15 }
-    ]
-  },
-  Winger: {
-    metrics: [
-      { key: "dribbles_p90", weight: 0.25 },
-      { key: "progressive_runs_p90", weight: 0.25 },
-      { key: "crosses_p90", weight: 0.10 },
-      { key: "xa_p90", weight: 0.20 },
-      { key: "goals_p90", weight: 0.20 }
-    ]
-  },
-  CF: {
-    metrics: [
-      { key: "goals_p90", weight: 0.35 },
-      { key: "xg_p90", weight: 0.10 },
-      { key: "efficiency_xg_minus_goals", weight: 0.30, reverse: true },
-      { key: "shots_on_target_pct", weight: 0.10 },
-      { key: "touches_in_box_p90", weight: 0.15 }
-    ]
-  }
-};
 
-function normalizePositionGroups(positionRaw) {
-  const p = String(positionRaw || "").toUpperCase().trim();
-  if (!p) return ["OTHER"];
-
-  const parts = p.split(",").map(x => x.trim());
-  const groups = new Set();
-
-  for (const part of parts) {
-    if (part === "GK" || part.includes("GK")) groups.add("GK");
-    if (part.includes("RB") || part.includes("RWB")) groups.add("RB");
-    if (part.includes("LB") || part.includes("LWB")) groups.add("LB");
-    if (part.includes("CB")) groups.add("CB");
-    if (part.includes("DMF")) groups.add("DMF");
-    if (part.includes("CM")) groups.add("CM");
-    if (part.includes("AMF")) groups.add("AMF");
-
-    if (
-      part.includes("WG") ||
-      part === "LW" ||
-      part === "RW" ||
-      part.includes("LWB") ||
-      part.includes("RWB")
-    ) {
-      groups.add("Winger");
-    }
-
-    if (part.includes("CF")) groups.add("CF");
-  }
-
-  return groups.size ? Array.from(groups) : ["OTHER"];
-}
-
-function normalizePositionGroup(positionRaw) {
-  const groups = normalizePositionGroups(positionRaw);
-
-  if (groups.includes("GK")) return "GK";
-  if (groups.includes("CF")) return "CF";
-  if (groups.includes("AMF")) return "AMF";
-  if (groups.includes("CM")) return "CM";
-  if (groups.includes("DMF")) return "DMF";
-  if (groups.includes("CB")) return "CB";
-  if (groups.includes("RB")) return "RB";
-  if (groups.includes("LB")) return "LB";
-  if (groups.includes("Winger")) return "Winger";
-
-  return "OTHER";
-}
-
-function calculatePlayerRatingFromModel(player, positionGroup) {
-  const model = POSITION_MODELS[positionGroup];
-  if (!model) return null;
-
-  let total = 0;
-  let totalWeight = 0;
-
-  for (const metric of model.metrics) {
-    let value = toNumber(player[metric.key]);
-
-    if (value === null || value === undefined || isNaN(value)) continue;
-
-    if (metric.reverse) value = -value;
-
-    total += value * metric.weight;
-    totalWeight += metric.weight;
-  }
-
-  if (!totalWeight) return null;
-
-  const score = total / totalWeight;
-
-  // escala simple provisional 4-10
-  return Number((4 + Math.max(0, Math.min(1, normalize(score, 1))) * 6).toFixed(2));
-}
     function processExcelRows(json, fileName) {
-  return json.map(p => {
-    const name = getValue(p, ["Name", "name", "Player", "Player name"]);
-    const team = getValue(p, ["Team", "team", "Squad"]);
-    const age = toNumber(getValue(p, ["Age", "age"]));
-    const position = getValue(p, ["Position", "position", "Pos"]);
-    const minutesPlayed = toNumber(getValue(p, ["minuges played", "Minutes played", "minutes played"]));
+      return json.map(p => {
+        const name = getValue(p, ["Name", "name", "Player", "Player name"]);
+        const team = getValue(p, ["Team", "team", "Squad"]);
+        const age = toNumber(getValue(p, ["Age", "age"]));
+        const position = getValue(p, ["Position", "position", "Pos"]);
+        const minutesPlayed = toNumber(getValue(p, ["Minutes played", "minutes played", "minuges played"]));
 
-    // MÉTRICAS YA EXISTENTES
-    const progressive = toNumber(getValue(p, [
-      "Progresive Runs 90",
-      "Progressive runs per 90",
-      "progressive_runs_p90"
-    ]));
+        const progressive = toNumber(getValue(p, [
+          "Progresive Runs 90",
+          "Progressive runs per 90",
+          "progressive_runs_p90"
+        ]));
 
-    const dribbles = toNumber(getValue(p, [
-      "dribblies_p90",
-      "Dribbles per 90",
-      "dribbles_p90"
-    ]));
+        const dribbles = toNumber(getValue(p, [
+          "Dribbles per 90",
+          "dribblies_p90",
+          "dribbles_p90"
+        ]));
 
-    const successfulDribblesPct = toNumber(getValue(p, [
-      "successful_dribbles_pct",
-      "Successful dribbles, %",
-      "Successful dribbles %"
-    ]));
+        const successfulDribblesPct = toNumber(getValue(p, [
+          "successful_dribbles_pct",
+          "Successful dribbles, %",
+          "Successful dribbles %"
+        ]));
 
-    const crosses = toNumber(getValue(p, [
-      "crosses_p90",
-      "Crosses per 90"
-    ]));
+        const crosses = toNumber(getValue(p, [
+          "crosses_p90",
+          "Crosses per 90"
+        ]));
 
-    const accurateCrossesPct = toNumber(getValue(p, [
-      "accurate_crosses_pct",
-      "Accurate crosses, %",
-      "Accurate crosses %"
-    ]));
+        const accurateCrossesPct = toNumber(getValue(p, [
+          "accurate_crosses_pct",
+          "Accurate crosses, %",
+          "Accurate crosses %"
+        ]));
 
-    const defensiveDuelsP90 = toNumber(getValue(p, [
-      "defensive_duels_p90",
-      "Defensive duels per 90"
-    ]));
+        const defensiveDuelsP90 = toNumber(getValue(p, [
+          "defensive_duels_p90",
+          "Defensive duels per 90"
+        ]));
 
-    const defensiveDuelsWonPct = toNumber(getValue(p, [
-      "defensive_duels_won_pct",
-      "Defensive duels won, %",
-      "Defensive duels won %"
-    ]));
+        const defensiveDuelsWonPct = toNumber(getValue(p, [
+          "defensive_duels_won_pct",
+          "Defensive duels won, %",
+          "Defensive duels won %"
+        ]));
 
-    const interceptionsP90 = toNumber(getValue(p, [
-      "interceptions_p90",
-      "Interceptions per 90"
-    ]));
+        const interceptionsP90 = toNumber(getValue(p, [
+          "interceptions_p90",
+          "Interceptions per 90"
+        ]));
 
-    const padjSlidingTackles = toNumber(getValue(p, [
-      "padj_sliding_tackles",
-      "PAdj Sliding tackles"
-    ]));
+        const padjSlidingTackles = toNumber(getValue(p, [
+          "padj_sliding_tackles",
+          "PAdj Sliding tackles"
+        ]));
 
-    const shotsBlockedP90 = toNumber(getValue(p, [
-      "shots_blocked_p90",
-      "Shots blocked per 90"
-    ]));
+        const shotsBlockedP90 = toNumber(getValue(p, [
+          "shots_blocked_p90",
+          "Shots blocked per 90"
+        ]));
 
-    const accelerationsP90 = toNumber(getValue(p, [
-      "accelerations_p90",
-      "Accelerations per 90"
-    ]));
+        const accelerationsP90 = toNumber(getValue(p, [
+          "accelerations_p90",
+          "Accelerations per 90"
+        ]));
 
-    const touchesInBoxP90 = toNumber(getValue(p, [
-      "touches_in_box_p90",
-      "Touches in box per 90"
-    ]));
+        const touchesInBoxP90 = toNumber(getValue(p, [
+          "touches_in_box_p90",
+          "Touches in box per 90"
+        ]));
 
-    const receivedPassesP90 = toNumber(getValue(p, [
-      "received_passes_p90",
-      "Received passes per 90"
-    ]));
+        const receivedPassesP90 = toNumber(getValue(p, [
+          "received_passes_p90",
+          "Received passes per 90"
+        ]));
 
-    // MÉTRICAS NUEVAS PARA TODAS LAS POSICIONES
-    const passAccuracy = toNumber(getValue(p, [
-      "pass_accuracy",
-      "Pass accuracy, %",
-      "Pass accuracy %"
-    ]));
+        const passAccuracy = toNumber(getValue(p, [
+          "pass_accuracy",
+          "Pass accuracy, %",
+          "Pass accuracy %"
+        ]));
 
-    const longPassAccuracy = toNumber(getValue(p, [
-      "long_pass_accuracy",
-      "Long passes accuracy, %",
-      "Long passes accuracy %"
-    ]));
+        const longPassAccuracy = toNumber(getValue(p, [
+          "long_pass_accuracy",
+          "Long passes accuracy, %",
+          "Long passes accuracy %"
+        ]));
 
-    const forwardPassAccuracy = toNumber(getValue(p, [
-      "forward_pass_accuracy",
-      "Forward passes accuracy, %",
-      "Forward passes accuracy %"
-    ]));
+        const forwardPassAccuracy = toNumber(getValue(p, [
+          "forward_pass_accuracy",
+          "Forward passes accuracy, %",
+          "Forward passes accuracy %"
+        ]));
 
-    const progressivePassesP90 = toNumber(getValue(p, [
-      "progressive_passes_p90",
-      "Progressive passes per 90"
-    ]));
+        const progressivePassesP90 = toNumber(getValue(p, [
+          "progressive_passes_p90",
+          "Progressive passes per 90"
+        ]));
 
-    const aerialDuelsWonPct = toNumber(getValue(p, [
-      "aerial_duels_won_pct",
-      "Aerial duels won, %",
-      "Aerial duels won %"
-    ]));
+        const aerialDuelsWonPct = toNumber(getValue(p, [
+          "aerial_duels_won_pct",
+          "Aerial duels won, %",
+          "Aerial duels won %"
+        ]));
 
-    const passesToFinalThirdP90 = toNumber(getValue(p, [
-      "passes_to_final_third_p90",
-      "Passes to final third per 90"
-    ]));
+        const passesToFinalThirdP90 = toNumber(getValue(p, [
+          "passes_to_final_third_p90",
+          "Passes to final third per 90"
+        ]));
 
-    const throughPassesP90 = toNumber(getValue(p, [
-      "through_passes_p90",
-      "Through passes per 90"
-    ]));
+        const throughPassesP90 = toNumber(getValue(p, [
+          "through_passes_p90",
+          "Through passes per 90"
+        ]));
 
-    const keyPassesP90 = toNumber(getValue(p, [
-      "key_passes_p90",
-      "Key passes per 90"
-    ]));
+        const keyPassesP90 = toNumber(getValue(p, [
+          "key_passes_p90",
+          "Key passes per 90"
+        ]));
 
-    const xAP90 = toNumber(getValue(p, [
-      "xA per 90",
-      "xa_p90",
-      "xA"
-    ]));
+        const xAP90 = toNumber(getValue(p, [
+          "xA per 90",
+          "xa_p90",
+          "xA"
+        ]));
 
-    const goalsP90 = toNumber(getValue(p, [
-      "Goals per 90",
-      "goals_p90"
-    ]));
+        const goalsP90 = toNumber(getValue(p, [
+          "Goals per 90",
+          "goals_p90"
+        ]));
 
-    const assistsP90 = toNumber(getValue(p, [
-      "Assists per 90",
-      "assists_p90"
-    ]));
+        const assistsP90 = toNumber(getValue(p, [
+          "Assists per 90",
+          "assists_p90"
+        ]));
 
-    const xGP90 = toNumber(getValue(p, [
-      "xG per 90",
-      "xg_p90"
-    ]));
+        const xGP90 = toNumber(getValue(p, [
+          "xG per 90",
+          "xg_p90"
+        ]));
 
-    const shotsOnTargetPct = toNumber(getValue(p, [
-      "Shots on target, %",
-      "Shots on target %",
-      "shots_on_target_pct"
-    ]));
+        const shotsOnTargetPct = toNumber(getValue(p, [
+          "Shots on target, %",
+          "Shots on target %",
+          "shots_on_target_pct"
+        ]));
 
-    const savePct = toNumber(getValue(p, [
-      "Save %",
-      "Saves, %",
-      "save_pct"
-    ]));
+        const savePct = toNumber(getValue(p, [
+          "Save %",
+          "Saves, %",
+          "save_pct"
+        ]));
 
-    const gkPrevented = toNumber(getValue(p, [
-      "xG conceded - Goals conceded",
-      "gk_prevented"
-    ]));
+        const gkPrevented = toNumber(getValue(p, [
+          "xG conceded - Goals conceded",
+          "gk_prevented"
+        ]));
 
-    const defActionsOutsideArea = toNumber(getValue(p, [
-      "Defensive actions outside area per 90",
-      "def_actions_outside_area"
-    ]));
+        const defActionsOutsideArea = toNumber(getValue(p, [
+          "Defensive actions outside area per 90",
+          "def_actions_outside_area"
+        ]));
 
-    // DERIVADAS
-    const goalsAssistsP90 = goalsP90 + assistsP90;
-    const efficiencyXgMinusGoals = xGP90 - goalsP90;
+        const goalsAssistsP90 = goalsP90 + assistsP90;
+        const efficiencyXgMinusGoals = xGP90 - goalsP90;
 
-    const player_key = (String(name) + "_" + String(team)).toLowerCase().trim();
-    const positionGroups = normalizePositionGroups(position);
+        const player_key = (String(name) + "_" + String(team)).toLowerCase().trim();
+        const positionGroups = normalizePositionGroups(position);
 
-    const playerBase = {
-      player_key,
-      name: name || "",
-      team: team || "",
-      age: age || 0,
-      position: position || "",
-      position_groups: positionGroups,
-      position_group: normalizePositionGroup(position),
-      minutes_played: minutesPlayed || 0,
+        const playerBase = {
+          player_key,
+          name: name || "",
+          team: team || "",
+          age: age || 0,
+          position: position || "",
+          position_groups: positionGroups,
+          position_group: normalizePositionGroup(position),
+          minutes_played: minutesPlayed || 0,
 
-      progressive_runs_p90: progressive,
-      dribbles_p90: dribbles,
-      successful_dribbles_pct: successfulDribblesPct,
-      crosses_p90: crosses,
-      accurate_crosses_pct: accurateCrossesPct,
-      defensive_duels_p90: defensiveDuelsP90,
-      defensive_duels_won_pct: defensiveDuelsWonPct,
-      interceptions_p90: interceptionsP90,
-      padj_sliding_tackles: padjSlidingTackles,
-      shots_blocked_p90: shotsBlockedP90,
-      accelerations_p90: accelerationsP90,
-      touches_in_box_p90: touchesInBoxP90,
-      received_passes_p90: receivedPassesP90,
+          progressive_runs_p90: progressive,
+          dribbles_p90: dribbles,
+          successful_dribbles_pct: successfulDribblesPct,
+          crosses_p90: crosses,
+          accurate_crosses_pct: accurateCrossesPct,
+          defensive_duels_p90: defensiveDuelsP90,
+          defensive_duels_won_pct: defensiveDuelsWonPct,
+          interceptions_p90: interceptionsP90,
+          padj_sliding_tackles: padjSlidingTackles,
+          shots_blocked_p90: shotsBlockedP90,
+          accelerations_p90: accelerationsP90,
+          touches_in_box_p90: touchesInBoxP90,
+          received_passes_p90: receivedPassesP90,
 
-      pass_accuracy: passAccuracy,
-      long_pass_accuracy: longPassAccuracy,
-      forward_pass_accuracy: forwardPassAccuracy,
-      progressive_passes_p90: progressivePassesP90,
-      aerial_duels_won_pct: aerialDuelsWonPct,
-      passes_to_final_third_p90: passesToFinalThirdP90,
-      through_passes_p90: throughPassesP90,
-      key_passes_p90: keyPassesP90,
-      xa_p90: xAP90,
-      goals_p90: goalsP90,
-      assists_p90: assistsP90,
-      goals_assists_p90: goalsAssistsP90,
-      xg_p90: xGP90,
-      efficiency_xg_minus_goals: efficiencyXgMinusGoals,
-      shots_on_target_pct: shotsOnTargetPct,
+          pass_accuracy: passAccuracy,
+          long_pass_accuracy: longPassAccuracy,
+          forward_pass_accuracy: forwardPassAccuracy,
+          progressive_passes_p90: progressivePassesP90,
+          aerial_duels_won_pct: aerialDuelsWonPct,
+          passes_to_final_third_p90: passesToFinalThirdP90,
+          through_passes_p90: throughPassesP90,
+          key_passes_p90: keyPassesP90,
+          xa_p90: xAP90,
+          goals_p90: goalsP90,
+          assists_p90: assistsP90,
+          goals_assists_p90: goalsAssistsP90,
+          xg_p90: xGP90,
+          efficiency_xg_minus_goals: efficiencyXgMinusGoals,
+          shots_on_target_pct: shotsOnTargetPct,
 
-      save_pct: savePct,
-      gk_prevented: gkPrevented,
-      def_actions_outside_area: defActionsOutsideArea,
+          save_pct: savePct,
+          gk_prevented: gkPrevented,
+          def_actions_outside_area: defActionsOutsideArea,
 
-      league_factor: 1.00,
-      source_file: fileName
-    };
+          league_factor: 1.00,
+          source_file: fileName
+        };
 
-    const ratings = {};
-    for (const group of positionGroups) {
-      ratings[group] = calculatePlayerRatingFromModel(playerBase, group);
+        const ratings = {};
+        for (const group of positionGroups) {
+          const rating = calculatePlayerRatingFromModel(playerBase, group);
+          if (rating !== null) ratings[group] = rating;
+        }
+
+        const numericRatings = Object.values(ratings).filter(v => typeof v === "number" && !isNaN(v));
+        const overallRating = numericRatings.length ? Math.max(...numericRatings) : 4.00;
+
+        const playerFinal = {
+          ...playerBase,
+          ratings,
+          overall_rating: Number(overallRating.toFixed(2))
+        };
+
+        playerFinal.adaptation_score = calculateAdaptationScore(playerFinal);
+
+        return playerFinal;
+      });
     }
-
-    const numericRatings = Object.values(ratings).filter(v => typeof v === "number" && !isNaN(v));
-    const overallRating = numericRatings.length ? Math.max(...numericRatings) : 0;
-
-    return {
-      ...playerBase,
-      ratings,
-      overall_rating: Number(overallRating.toFixed(2))
-    };
-  });
-}
 
     function sortPlayers(players) {
       const sortBy = document.getElementById("sortBy").value;
 
       return [...players].sort((a, b) => {
-       if (sortBy === "weighted_rating") {
-  return toNumber(b.overall_rating) - toNumber(a.overall_rating);
-}
+        if (sortBy === "weighted_rating") {
+          return calculateWeightedRating(b) - calculateWeightedRating(a);
+        }
+
+        if (sortBy === "overall_rating") {
+          return toNumber(b.overall_rating) - toNumber(a.overall_rating);
+        }
+
+        if (sortBy === "adaptation_score") {
+          return toNumber(b.adaptation_score) - toNumber(a.adaptation_score);
+        }
+
+        if (sortBy === "minutes_played") {
+          return toNumber(b.minutes_played) - toNumber(a.minutes_played);
+        }
+
+        if (sortBy === "age") {
+          return toNumber(a.age) - toNumber(b.age);
+        }
+
+        return 0;
+      });
+    }
+
+    function validateExcelHeaders(json) {
+      if (!json || !json.length) {
+        return "El Excel está vacío o la primera hoja no tiene datos.";
+      }
+
+      const firstRow = json[0];
+      const keys = Object.keys(firstRow).map(k => k.trim().toLowerCase());
+
+      const hasName = keys.some(k => ["name", "player", "player name"].includes(k));
+      const hasTeam = keys.some(k => ["team", "squad"].includes(k));
+      const hasPosition = keys.some(k => ["position", "pos"].includes(k));
+
+      if (!hasName) return "Falta una columna de nombre de jugador: Name / Player.";
+      if (!hasTeam) return "Falta una columna de equipo: Team / Squad.";
+      if (!hasPosition) return "Falta una columna de posición: Position / Pos.";
+
+      return "";
+    }
 
     function loadExcel() {
+      clearMessage();
+
       const file = document.getElementById("excelFile").files[0];
       if (!file) {
-        alert("Selecciona Excel");
+        showMessage("Selecciona un archivo Excel primero.", "error");
         return;
       }
 
       const reader = new FileReader();
 
       reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, { type: "array" });
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(sheet);
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: "array" });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(sheet);
 
-        processedPlayers = dedupePlayers(processExcelRows(json, file.name));
-        currentPlayers = sortPlayers([...processedPlayers]);
-        populateTeamFilter(currentPlayers);
-        renderTable(currentPlayers);
+          const validationError = validateExcelHeaders(json);
+          if (validationError) {
+            showMessage(validationError, "error");
+            return;
+          }
+
+          processedPlayers = dedupePlayers(processExcelRows(json, file.name));
+          currentPlayers = sortPlayers([...processedPlayers]);
+
+          populateTeamFilter(currentPlayers);
+          renderTable(currentPlayers);
+
+          showMessage(`Excel cargado correctamente: ${currentPlayers.length} jugadores procesados.`, "info");
+          console.log("DATA:", json);
+          console.log("PROCESSED:", currentPlayers);
+        } catch (error) {
+          console.error(error);
+          showMessage("Error leyendo el Excel. Revisa que la primera fila tenga los nombres de columnas.", "error");
+        }
       };
 
       reader.readAsArrayBuffer(file);
     }
 
     async function saveToSupabase() {
+      clearMessage();
+
       if (!processedPlayers.length) {
-        alert("Primero carga Excel");
+        showMessage("Primero carga un Excel.", "error");
         return;
       }
 
@@ -1250,8 +1339,8 @@ function calculatePlayerRatingFromModel(player, positionGroup) {
         .select("player_key");
 
       if (errorFetch) {
-        alert("Error leyendo jugadores existentes: " + errorFetch.message);
         console.log(errorFetch);
+        showMessage("Error leyendo jugadores existentes: " + errorFetch.message, "error");
         return;
       }
 
@@ -1259,7 +1348,7 @@ function calculatePlayerRatingFromModel(player, positionGroup) {
       const newPlayers = processedPlayers.filter(p => !existingKeys.has(p.player_key));
 
       if (newPlayers.length === 0) {
-        alert("Todos los jugadores ya existen");
+        showMessage("Todos los jugadores ya existen en Supabase.", "info");
         return;
       }
 
@@ -1268,32 +1357,43 @@ function calculatePlayerRatingFromModel(player, positionGroup) {
         .insert(newPlayers);
 
       if (error) {
-        alert("Error guardando: " + error.message);
         console.log(error);
+        showMessage("Error guardando: " + error.message, "error");
         return;
       }
 
-      alert(newPlayers.length + " jugadores nuevos guardados");
+      showMessage(newPlayers.length + " jugadores nuevos guardados en Supabase.", "info");
     }
 
     async function loadFromSupabase() {
+      clearMessage();
+
       const { data, error } = await supabaseClient
         .from("players_app")
         .select("*");
 
       if (error) {
-        alert("Error cargando: " + error.message);
         console.log(error);
+        showMessage("Error cargando desde Supabase: " + error.message, "error");
         return;
       }
 
-      currentPlayers = sortPlayers(dedupePlayers(data || []).map(player => ({
-        ...player,
-        position_group: player.position_group || normalizePositionGroup(player.position)
-      })));
+      currentPlayers = sortPlayers(
+        dedupePlayers((data || []).map(player => ({
+          ...player,
+          position_group: player.position_group || normalizePositionGroup(player.position),
+          position_groups: player.position_groups || normalizePositionGroups(player.position),
+          overall_rating: toNumber(player.overall_rating),
+          adaptation_score: toNumber(player.adaptation_score),
+          league_factor: toNumber(player.league_factor) || 1
+        })))
+      );
+
+      processedPlayers = [...currentPlayers];
 
       populateTeamFilter(currentPlayers);
       renderTable(currentPlayers);
+      showMessage(`Supabase cargado correctamente: ${currentPlayers.length} jugadores.`, "info");
     }
 
     function applyFilters() {
@@ -1305,22 +1405,26 @@ function calculatePlayerRatingFromModel(player, positionGroup) {
       const adaptationFilter = toNumber(document.getElementById("filterAdaptation").value);
 
       const filtered = currentPlayers.filter(player => {
-        const matchesPosition =
-  !positionFilter ||
-  (Array.isArray(player.position_groups)
-    ? player.position_groups.includes(positionFilter)
-    : normalizePositionGroups(player.position).includes(positionFilter));
+        const groups = Array.isArray(player.position_groups)
+          ? player.position_groups
+          : normalizePositionGroups(player.position);
+
+        const matchesPosition = !positionFilter || groups.includes(positionFilter);
         const matchesTeam = !teamFilter || String(player.team || "") === teamFilter;
         const matchesAge = !ageFilter || toNumber(player.age) <= ageFilter;
         const matchesMinutes = !minutesFilter || toNumber(player.minutes_played) >= minutesFilter;
         const matchesRating = !ratingFilter || toNumber(player.overall_rating) >= ratingFilter;
         const matchesAdaptation = !adaptationFilter || toNumber(player.adaptation_score) >= adaptationFilter;
 
-        const matchesPosition =
-  !positionFilter ||
-  (Array.isArray(player.position_groups)
-    ? player.position_groups.includes(positionFilter)
-    : normalizePositionGroups(player.position).includes(positionFilter));
+        return (
+          matchesPosition &&
+          matchesTeam &&
+          matchesAge &&
+          matchesMinutes &&
+          matchesRating &&
+          matchesAdaptation
+        );
+      });
 
       renderTable(sortPlayers(filtered));
     }
@@ -1332,6 +1436,7 @@ function calculatePlayerRatingFromModel(player, positionGroup) {
       document.getElementById("filterMinutes").value = "";
       document.getElementById("filterRating").value = "";
       document.getElementById("filterAdaptation").value = "";
+      document.getElementById("sortBy").value = "weighted_rating";
       renderTable(sortPlayers(currentPlayers));
     }
   </script>
