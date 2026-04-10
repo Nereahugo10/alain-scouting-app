@@ -205,8 +205,8 @@
           <th>Raw Position</th>
           <th>Main Position</th>
           <th>Role Group</th>
-          <th>Rating</th>
-          <th>Weighted Rating</th>
+          <th onclick="sortTableBy('rating')">Rating</th>
+<th onclick="sortTableBy('weighted_rating')">Weighted</th>
           <th>League Factor</th>
           <th>Adaptation</th>
           <th>Goals</th>
@@ -439,7 +439,7 @@
     const gk_exits = metric(player, "gk_exits");
     const clean_sheets = metric(player, "clean_sheets");
 
-    let rating = 4.0;
+    let rating = 4.5;
 
     if (group === "GK") {
       rating = weightedAverage([
@@ -885,7 +885,6 @@
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
- <script>
 
   let currentSortColumn = null;
 let currentSortDirection = "desc";
@@ -913,7 +912,7 @@ function sortTableBy(column) {
 
   renderTable(sorted);
 }
-
+  
 </script>
 
   
