@@ -573,45 +573,106 @@
       }
 
       const realKeys = Object.keys(obj);
-      for (const wanted of possibleKeys) {
-        const found = realKeys.find(k => k.trim().toLowerCase() === wanted.trim().toLowerCase());
-        if (found) return obj[found];
-      }
+for (const wanted of possibleKeys) {
+  const found = realKeys.find(
+    k => k.trim().toLowerCase() === wanted.trim().toLowerCase()
+  );
+  if (found) return obj[found];
+}
 
-      return "";
+return "";
+}
+
+function normalizePositionGroups(positionRaw) {
+  const p = String(positionRaw || "").toUpperCase().trim();
+
+  if (!p) return ["OTHER"];
+
+  const parts = p.split(",").map(x => x.trim());
+  const groups = new Set();
+
+  for (const part of parts) {
+    if (part === "GK" || part.includes("GK")) {
+      groups.add("GK");
     }
 
-    function normalizePositionGroup(positionRaw) {
-      const p = String(positionRaw || "").toUpperCase();
-
-      if (p.includes("GK")) return "GK";
-      if (p.includes("RWB") || p.includes("LWB")) return "RWB_LWB";
-      if (p.includes("RB") || p.includes("LB")) return "RB_LB";
-      if (p.includes("CB")) return "CB";
-      if (p.includes("DMF")) return "DMF";
-      if (p.includes("WG")) return "WG";
-      if (p.includes("AM")) return "AM";
-      if (p.includes("CF")) return "CF";
-      if (p.includes("MC")) return "MC";
-
-      return "OTHER";
+    if (part.includes("RB") || part.includes("RWB")) {
+      groups.add("RB");
     }
 
-    function groupLabel(group) {
-      const labels = {
-        GK: "GK",
-        RB_LB: "RB / LB",
-        RWB_LWB: "RWB / LWB",
-        CB: "CB",
-        DMF: "DMF",
-        MC: "MC",
-        WG: "Wingers",
-        AM: "AM",
-        CF: "CF",
-        OTHER: "Other"
-      };
-      return labels[group] || group;
+    if (part.includes("LB") || part.includes("LWB")) {
+      groups.add("LB");
     }
+
+    if (part.includes("CB")) {
+      groups.add("CB");
+    }
+
+    if (part.includes("DMF")) {
+      groups.add("DMF");
+    }
+
+    if (part.includes("CM")) {
+      groups.add("CM");
+    }
+
+    if (part.includes("AMF")) {
+      groups.add("AMF");
+    }
+
+    if (
+      part.includes("WG") ||
+      part === "LW" ||
+      part === "RW" ||
+      part.includes("LWB") ||
+      part.includes("RWB")
+    ) {
+      groups.add("Winger");
+    }
+
+    if (part.includes("CF")) {
+      groups.add("CF");
+    }
+  }
+
+  return groups.size ? Array.from(groups) : ["OTHER"];
+}
+
+function normalizePositionGroup(positionRaw) {
+  const groups = normalizePositionGroups(positionRaw);
+
+  if (groups.includes("GK")) return "GK";
+  if (groups.includes("CF")) return "CF";
+  if (groups.includes("AMF")) return "AMF";
+  if (groups.includes("CM")) return "CM";
+  if (groups.includes("DMF")) return "DMF";
+  if (groups.includes("CB")) return "CB";
+  if (groups.includes("RB")) return "RB";
+  if (groups.includes("LB")) return "LB";
+  if (groups.includes("Winger")) return "Winger";
+
+  return "OTHER";
+}
+
+function groupLabel(group) {
+  const labels = {
+    GK: "GK",
+    RB: "RB",
+    LB: "LB",
+    CB: "CB",
+    DMF: "DMF",
+    CM: "CM",
+    AMF: "AMF",
+    Winger: "Winger",
+    CF: "CF",
+    OTHER: "Other"
+  };
+  return labels[group] || group;
+}
+
+function groupLabelsText(positionRaw) {
+  return normalizePositionGroups(positionRaw).map(groupLabel).join(" / ");
+}
 
     function calculateWeightedRating(player) {
       const factor = toNumber(player.league_factor);
