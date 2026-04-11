@@ -13,18 +13,18 @@
 
   <style>
     :root{
-      --bg:#07101f;
-      --panel:#0f1b33;
-      --panel2:#12213d;
-      --line:#284062;
-      --text:#edf4ff;
-      --muted:#96acd1;
+      --bg:#070b14;
+      --panel:#0f172a;
+      --panel2:#111b31;
+      --line:#21304f;
+      --text:#ecf2ff;
+      --muted:#93a4c6;
       --accent:#5b8cff;
       --accent2:#7c5cff;
       --green:#22c55e;
       --yellow:#f59e0b;
       --red:#ef4444;
-      --shadow:0 18px 45px rgba(0,0,0,.28);
+      --shadow:0 16px 40px rgba(0,0,0,.32);
       --radius:18px;
     }
 
@@ -35,89 +35,46 @@
       color:var(--text);
       background:
         radial-gradient(circle at top left, rgba(91,140,255,.18), transparent 25%),
-        radial-gradient(circle at top right, rgba(124,92,255,.14), transparent 22%),
-        linear-gradient(180deg, #07101f 0%, #0a1325 55%, #0b1629 100%);
+        radial-gradient(circle at top right, rgba(124,92,255,.16), transparent 22%),
+        linear-gradient(180deg, #070b14 0%, #0a1020 55%, #0c1222 100%);
       min-height:100vh;
     }
 
-    .shell{
-      max-width:1560px;
-      margin:0 auto;
-      padding:22px;
-    }
+    .shell{max-width:1560px;margin:0 auto;padding:22px}
 
     .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:18px;
-      margin-bottom:18px;
-      padding:16px 18px;
-      border-radius:20px;
-      background:linear-gradient(180deg, rgba(18,33,61,.92), rgba(13,24,44,.96));
-      border:1px solid rgba(120,150,210,.18);
+      display:flex;align-items:center;justify-content:space-between;gap:18px;
+      margin-bottom:18px;padding:16px 18px;border-radius:20px;
+      background:linear-gradient(180deg, rgba(17,27,49,.92), rgba(13,21,40,.96));
+      border:1px solid rgba(113,140,196,.18);
       box-shadow:var(--shadow);
     }
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:14px;
-    }
-
+    .brand{display:flex;align-items:center;gap:14px}
     .brand-mark{
-      width:46px;
-      height:46px;
-      border-radius:14px;
+      width:44px;height:44px;border-radius:14px;
       background:linear-gradient(135deg, var(--accent), var(--accent2));
-      display:grid;
-      place-items:center;
-      font-weight:900;
-      font-size:18px;
-      color:white;
+      display:grid;place-items:center;font-weight:900;font-size:18px;color:white;
       box-shadow:0 10px 24px rgba(91,140,255,.28);
     }
+    .brand h1{margin:0;font-size:24px;line-height:1;letter-spacing:-.03em}
+    .brand p{margin:4px 0 0 0;color:var(--muted);font-size:13px}
 
-    .brand h1{
-      margin:0;
-      font-size:24px;
-      line-height:1;
-      letter-spacing:-.03em;
-    }
-
-    .brand p{
-      margin:4px 0 0 0;
-      color:var(--muted);
-      font-size:13px;
-    }
-
-    .top-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
+    .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .tag{
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid rgba(120,150,210,.22);
+      padding:8px 12px;border-radius:999px;
+      border:1px solid rgba(113,140,196,.22);
       background:rgba(255,255,255,.03);
-      color:#d7e6ff;
-      font-size:12px;
-      font-weight:700;
-      letter-spacing:.04em;
+      color:#cfe0ff;font-size:12px;font-weight:700;letter-spacing:.04em;
     }
 
     .hero{
-      display:grid;
-      grid-template-columns:1.2fr .9fr;
-      gap:18px;
-      margin-bottom:18px;
+      display:grid;grid-template-columns:1.25fr .85fr;gap:18px;margin-bottom:18px;
     }
 
     .card{
-      background:linear-gradient(180deg, rgba(17,29,54,.94), rgba(12,22,40,.98));
-      border:1px solid rgba(120,150,210,.16);
+      background:linear-gradient(180deg, rgba(16,24,45,.92), rgba(11,18,35,.97));
+      border:1px solid rgba(113,140,196,.16);
       border-radius:22px;
       box-shadow:var(--shadow);
       overflow:hidden;
@@ -125,131 +82,55 @@
     }
 
     .card::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
+      content:"";position:absolute;inset:0;pointer-events:none;
       background:
         radial-gradient(circle at 12% 10%, rgba(53,200,255,.10), transparent 22%),
         radial-gradient(circle at 88% 16%, rgba(124,92,255,.10), transparent 20%);
     }
 
-    .hero-main{
-      padding:28px;
-      position:relative;
-    }
-
+    .hero-main{padding:28px;position:relative}
     .eyebrow{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:999px;
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border-radius:999px;
       background:rgba(255,255,255,.03);
-      border:1px solid rgba(120,150,210,.18);
-      color:#cfe0ff;
-      font-size:12px;
-      font-weight:800;
-      letter-spacing:.08em;
-      text-transform:uppercase;
+      border:1px solid rgba(113,140,196,.18);
+      color:#c7d7f7;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
       margin-bottom:16px;
     }
-
     .hero-main h2{
-      margin:0 0 10px 0;
-      font-size:38px;
-      line-height:1.02;
-      letter-spacing:-.04em;
+      margin:0 0 10px 0;font-size:38px;line-height:1.02;letter-spacing:-.04em;
       max-width:760px;
     }
-
     .hero-main p{
-      margin:0;
-      color:#bdd0f3;
-      font-size:15px;
-      line-height:1.65;
-      max-width:760px;
+      margin:0;color:#b5c5e4;font-size:15px;line-height:1.65;max-width:760px;
     }
 
     .stats{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:12px;
-      margin-top:22px;
+      display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:22px;
     }
-
     .stat{
-      padding:16px;
-      border-radius:18px;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(120,150,210,.16);
+      padding:16px;border-radius:18px;background:rgba(255,255,255,.03);
+      border:1px solid rgba(113,140,196,.16);
     }
+    .stat .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px}
+    .stat .v{font-size:28px;font-weight:900;letter-spacing:-.03em}
 
-    .stat .k{
-      color:var(--muted);
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      font-weight:700;
-      margin-bottom:8px;
-    }
+    .hero-side{padding:20px;display:flex;flex-direction:column;gap:14px;position:relative}
+    .side-title{font-size:12px;text-transform:uppercase;letter-spacing:.09em;font-weight:800;color:#c8d7f5}
 
-    .stat .v{
-      font-size:28px;
-      font-weight:900;
-      letter-spacing:-.03em;
-    }
-
-    .hero-side{
-      padding:20px;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      position:relative;
-    }
-
-    .side-title{
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.09em;
-      font-weight:800;
-      color:#d4e2ff;
-    }
-
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
+    .field{display:flex;flex-direction:column;gap:8px}
     .field label{
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      font-weight:700;
-      color:#9bb0d8;
+      font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:#9bb0d8;
     }
 
-    input, select, button{
-      width:100%;
-      border:none;
-      outline:none;
-      border-radius:14px;
-      padding:13px 14px;
-      font-size:14px;
-      font-family:inherit;
-      transition:.18s ease;
+    input,select,button{
+      width:100%;border:none;outline:none;border-radius:14px;
+      padding:13px 14px;font-size:14px;font-family:inherit;transition:.18s ease;
     }
 
-    input, select{
+    input,select{
       background:linear-gradient(180deg, #0b1223, #0a1120);
-      border:1px solid #27385a;
-      color:var(--text);
-    }
-
-    input::placeholder{
-      color:#8fa2c5;
-      opacity:1;
+      border:1px solid #27385a;color:var(--text);
     }
 
     select{
@@ -272,330 +153,158 @@
       color:#ecf2ff;
     }
 
-    input:focus, select:focus{
+    input::placeholder{
+      color:#8fa2c5;
+      opacity:1;
+    }
+
+    input:focus,select:focus{
       border-color:rgba(91,140,255,.7);
       box-shadow:0 0 0 4px rgba(91,140,255,.12);
     }
 
-    button{
-      cursor:pointer;
-      font-weight:800;
-    }
+    button{cursor:pointer;font-weight:800}
 
     .btn-primary{
       background:linear-gradient(135deg, var(--accent), var(--accent2));
-      color:white;
-      box-shadow:0 12px 28px rgba(91,140,255,.25);
+      color:white;box-shadow:0 12px 28px rgba(91,140,255,.25);
     }
-
     .btn-secondary{
       background:linear-gradient(180deg, #14203b, #10182d);
-      color:#dbe7ff;
-      border:1px solid #2b4069;
+      color:#dbe7ff;border:1px solid #2b4069;
     }
-
     .btn-success{
       background:linear-gradient(135deg, #16a34a, #22c55e);
-      color:white;
-      border:1px solid rgba(34,197,94,.4);
+      color:white;border:1px solid rgba(34,197,94,.4);
     }
-
     .btn-info{
       background:linear-gradient(135deg, #0ea5e9, #2563eb);
-      color:white;
-      border:1px solid rgba(59,130,246,.35);
-    }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
+      color:white;border:1px solid rgba(59,130,246,.35);
     }
 
     .status{
-      padding:14px;
-      border-radius:16px;
+      padding:14px;border-radius:16px;
       background:rgba(255,255,255,.03);
-      border:1px solid rgba(120,150,210,.16);
-      color:#e8f1ff;
-      white-space:pre-wrap;
-      line-height:1.5;
-      min-height:104px;
+      border:1px solid rgba(113,140,196,.16);
+      color:#e8f1ff;white-space:pre-wrap;line-height:1.5;min-height:104px;
     }
-
-    .status.ok{
-      border-color:rgba(34,197,94,.28);
-      background:rgba(34,197,94,.08);
-    }
-
-    .status.error{
-      border-color:rgba(239,68,68,.28);
-      background:rgba(239,68,68,.08);
-    }
+    .status.ok{border-color:rgba(34,197,94,.28);background:rgba(34,197,94,.08)}
+    .status.error{border-color:rgba(239,68,68,.28);background:rgba(239,68,68,.08)}
 
     .filter-bar{
       margin-bottom:18px;
       background:rgba(9,15,30,.82);
       backdrop-filter:blur(14px);
-      border:1px solid rgba(120,150,210,.18);
+      border:1px solid rgba(113,140,196,.18);
       border-radius:20px;
       box-shadow:var(--shadow);
       padding:16px;
     }
 
     .filter-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:14px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;
     }
-
     .filter-title{
-      font-size:17px;
-      font-weight:900;
-      letter-spacing:-.02em;
+      font-size:17px;font-weight:900;letter-spacing:-.02em;
     }
-
     .filter-note{
-      color:var(--muted);
-      font-size:13px;
+      color:var(--muted);font-size:13px;
     }
 
     .config-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-      margin-top:8px;
+      display:grid;grid-template-columns:1fr 1fr;gap:12px;
     }
 
     .filters{
-      display:grid;
-      grid-template-columns:repeat(8,minmax(0,1fr));
-      gap:12px;
-      align-items:end;
+      display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px;align-items:end;
     }
 
-    .small-btn{
-      min-width:120px;
+    .actions{
+      display:flex;gap:10px;flex-wrap:wrap;
     }
 
     .summary-grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:12px;
-      margin-bottom:18px;
+      display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px;
     }
 
     .summary-card{
       background:linear-gradient(180deg, rgba(17,27,49,.92), rgba(12,20,37,.96));
-      border:1px solid rgba(120,150,210,.16);
-      border-radius:18px;
-      padding:16px;
-      box-shadow:var(--shadow);
+      border:1px solid rgba(113,140,196,.16);
+      border-radius:18px;padding:16px;box-shadow:var(--shadow);
     }
 
-    .summary-card .k{
-      color:var(--muted);
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      font-weight:700;
-      margin-bottom:8px;
-    }
-
-    .summary-card .v{
-      font-size:26px;
-      font-weight:900;
-      letter-spacing:-.03em;
-    }
-
-    .summary-card .s{
-      margin-top:6px;
-      font-size:12px;
-      color:#bdd0f3;
-    }
+    .summary-card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px}
+    .summary-card .v{font-size:26px;font-weight:900;letter-spacing:-.03em}
+    .summary-card .s{margin-top:6px;font-size:12px;color:#bdd0f3}
 
     .table-card{
       background:linear-gradient(180deg, rgba(16,24,45,.94), rgba(10,16,30,.98));
-      border:1px solid rgba(120,150,210,.16);
-      border-radius:22px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
+      border:1px solid rgba(113,140,196,.16);
+      border-radius:22px;box-shadow:var(--shadow);overflow:hidden;
     }
 
     .table-top{
-      padding:16px 18px;
-      border-bottom:1px solid rgba(120,150,210,.14);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
+      padding:16px 18px;border-bottom:1px solid rgba(113,140,196,.14);
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
     }
 
-    .table-title{
-      font-size:18px;
-      font-weight:900;
-    }
+    .table-title{font-size:18px;font-weight:900}
+    .table-sub{color:var(--muted);font-size:13px}
 
-    .table-sub{
-      color:var(--muted);
-      font-size:13px;
-    }
-
-    .table-wrap{
-      overflow:auto;
-      max-height:74vh;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:1820px;
-    }
+    .table-wrap{overflow:auto;max-height:74vh}
+    table{width:100%;border-collapse:collapse;min-width:1720px}
 
     thead th{
-      position:sticky;
-      top:0;
-      z-index:2;
+      position:sticky;top:0;z-index:2;
       background:rgba(14,20,37,.98);
-      backdrop-filter:blur(10px);
-      color:#dfe9ff;
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      text-align:left;
-      padding:14px 12px;
-      cursor:pointer;
-      border-bottom:1px solid rgba(120,150,210,.18);
+      color:#dfe9ff;font-size:12px;text-transform:uppercase;letter-spacing:.08em;
+      text-align:left;padding:14px 12px;cursor:pointer;border-bottom:1px solid rgba(113,140,196,.18);
     }
 
     tbody td{
-      padding:13px 12px;
-      border-bottom:1px solid rgba(120,150,210,.08);
-      color:#e8f0ff;
-      font-size:13px;
-      white-space:nowrap;
+      padding:13px 12px;border-bottom:1px solid rgba(113,140,196,.08);
+      color:#e8f0ff;font-size:13px;white-space:nowrap;
     }
 
-    tbody tr:hover{
-      background:rgba(91,140,255,.05);
-    }
+    tbody tr:hover{background:rgba(91,140,255,.05)}
 
-    .player-cell{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-
-    .player-name{
-      font-weight:800;
-      color:white;
-    }
-
-    .player-sub{
-      font-size:12px;
-      color:var(--muted);
-    }
+    .player-cell{display:flex;flex-direction:column;gap:4px}
+    .player-name{font-weight:800;color:white}
+    .player-sub{font-size:12px;color:var(--muted)}
 
     .pill{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:54px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:rgba(91,140,255,.12);
-      border:1px solid rgba(91,140,255,.28);
-      color:#d9e6ff;
-      font-size:12px;
-      font-weight:800;
-      letter-spacing:.04em;
+      display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:6px 10px;border-radius:999px;
+      background:rgba(91,140,255,.12);border:1px solid rgba(91,140,255,.28);color:#d9e6ff;font-size:12px;font-weight:800;letter-spacing:.04em;
     }
 
     .rank-badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:38px;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:900;
-      border:1px solid rgba(120,150,210,.16);
-      background:#111a2f;
-      color:#d6e3ff;
+      display:inline-flex;align-items:center;justify-content:center;min-width:38px;padding:6px 10px;border-radius:999px;
+      font-size:12px;font-weight:900;border:1px solid rgba(113,140,196,.16);background:#111a2f;color:#d6e3ff;
     }
-
     .rank-top10{
       background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(91,140,255,.18));
-      border-color:rgba(245,158,11,.36);
-      color:#ffe39a;
+      border-color:rgba(245,158,11,.36);color:#ffe39a;
     }
-
     .rank-top3{
       background:linear-gradient(135deg, rgba(245,158,11,.28), rgba(255,255,255,.12));
-      border-color:rgba(245,158,11,.54);
-      color:#fff1c2;
+      border-color:rgba(245,158,11,.54);color:#fff1c2;
     }
 
     .metric-chip{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:76px;
-      padding:7px 10px;
-      border-radius:12px;
-      font-weight:800;
-      border:1px solid rgba(255,255,255,.06);
+      display:inline-flex;align-items:center;justify-content:center;min-width:76px;padding:7px 10px;border-radius:12px;
+      font-weight:800;border:1px solid rgba(255,255,255,.06);
     }
-
-    .metric-good{
-      background:rgba(34,197,94,.14);
-      border-color:rgba(34,197,94,.34);
-      color:#8ef0af;
-    }
-
-    .metric-mid{
-      background:rgba(245,158,11,.14);
-      border-color:rgba(245,158,11,.30);
-      color:#ffd369;
-    }
-
-    .metric-bad{
-      background:rgba(239,68,68,.14);
-      border-color:rgba(239,68,68,.32);
-      color:#ffb0b0;
-    }
-
+    .metric-good{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.34);color:#8ef0af}
+    .metric-mid{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.30);color:#ffd369}
+    .metric-bad{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.32);color:#ffb0b0}
     .rating-elite{
       background:linear-gradient(135deg, rgba(91,140,255,.20), rgba(124,92,255,.18)) !important;
-      border-color:rgba(91,140,255,.35)!important;
-      color:#eaf1ff!important;
-      box-shadow:inset 0 0 0 1px rgba(91,140,255,.15);
+      border-color:rgba(91,140,255,.35)!important;color:#eaf1ff!important;
     }
 
-    .top10-row{
-      background:linear-gradient(90deg, rgba(91,140,255,.04), rgba(124,92,255,.03));
-    }
-
-    .top3-row{
-      background:linear-gradient(90deg, rgba(91,140,255,.09), rgba(124,92,255,.06));
-    }
-
-    .top10-row:hover,.top3-row:hover{
-      background:linear-gradient(90deg, rgba(91,140,255,.12), rgba(124,92,255,.08));
-    }
-
-    .empty{
-      padding:28px;
-      text-align:center;
-      color:var(--muted);
-    }
-
-    .mono{
-      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
+    .top10-row{background:linear-gradient(90deg, rgba(91,140,255,.04), rgba(124,92,255,.03))}
+    .top3-row{background:linear-gradient(90deg, rgba(91,140,255,.09), rgba(124,92,255,.06))}
+    .empty{padding:28px;text-align:center;color:var(--muted)}
 
     @media (max-width:1280px){
       .hero{grid-template-columns:1fr}
@@ -627,18 +336,17 @@
       <div class="top-actions">
         <div class="tag">PRO MODEL</div>
         <div class="tag">LIVE FILTERS</div>
-        <div class="tag">SUPABASE UPSERT</div>
+        <div class="tag">SUPABASE SAFE</div>
       </div>
     </section>
 
     <section class="hero">
       <div class="card">
         <div class="hero-main">
-          <div class="eyebrow">Positional percentile engine</div>
-          <h2>Guarda sin duplicados y actualiza automáticamente en Supabase</h2>
+          <div class="eyebrow">Base estable</div>
+          <h2>Primero carga Excel. Luego guarda en Supabase sin duplicados.</h2>
           <p>
-            Primero carga Excel sin depender de nada externo. Luego, con un botón, guarda todo en Supabase usando
-            <span class="mono">upsert</span> para evitar duplicados.
+            Esta versión no deja que Supabase rompa la carga del Excel. Si Supabase falla, la app sigue viva.
           </p>
 
           <div class="stats">
@@ -680,25 +388,25 @@
       </div>
     </section>
 
-    <section class="filter-bar" style="margin-bottom:12px">
+    <section class="filter-bar">
       <div class="filter-head">
         <div>
           <div class="filter-title">Configuración Supabase</div>
-          <div class="filter-note">Guárdala una vez. Si Supabase falla, la app sigue funcionando con Excel local.</div>
+          <div class="filter-note">Guárdala una vez. No afecta a la carga local del Excel.</div>
         </div>
         <div class="actions">
-          <button class="btn-primary small-btn" id="saveSupabaseConfig">Guardar config</button>
+          <button class="btn-primary" id="saveSupabaseConfig">Guardar config</button>
         </div>
       </div>
 
       <div class="config-grid">
         <div class="field">
           <label>Supabase URL</label>
-          <input type="text" id="supabaseUrl" class="mono" placeholder="https://xxxx.supabase.co" />
+          <input type="text" id="supabaseUrl" placeholder="https://xxxx.supabase.co" />
         </div>
         <div class="field">
           <label>Supabase anon key</label>
-          <input type="text" id="supabaseKey" class="mono" placeholder="Pega aquí tu anon key" />
+          <input type="text" id="supabaseKey" placeholder="Pega aquí tu anon key" />
         </div>
       </div>
     </section>
@@ -707,11 +415,11 @@
       <div class="filter-head">
         <div>
           <div class="filter-title">Filtros de scouting</div>
-          <div class="filter-note">Se actualizan al cambiar cualquier valor. También tienes botones de aplicar y resetear.</div>
+          <div class="filter-note">Se actualizan al cambiar cualquier valor.</div>
         </div>
         <div class="actions">
-          <button class="btn-primary small-btn" id="applyFilters">Aplicar</button>
-          <button class="btn-secondary small-btn" id="clearFilters">Reset</button>
+          <button class="btn-primary" id="applyFilters">Aplicar</button>
+          <button class="btn-secondary" id="clearFilters">Reset</button>
         </div>
       </div>
 
@@ -802,7 +510,7 @@
       <div class="table-top">
         <div>
           <div class="table-title">Ranking de jugadores</div>
-          <div class="table-sub">Supabase PRO sin duplicados y con update automático.</div>
+          <div class="table-sub">Carga Excel primero. Supabase después.</div>
         </div>
       </div>
 
@@ -830,7 +538,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td colspan="17" class="empty">Carga un Excel o pulsa “Cargar desde Supabase”.</td></tr>
+            <tr><td colspan="17" class="empty">Carga un Excel o usa Supabase.</td></tr>
           </tbody>
         </table>
       </div>
@@ -845,7 +553,6 @@
     let sortAsc = false;
     let currentSource = "LOCAL";
     let supabaseClient = null;
-
     const SUPABASE_TABLE = "players";
 
     const POSITION_MODELS = {
@@ -1231,6 +938,7 @@
           setStatus("No hay workbook cargado todavía.", "error");
           return;
         }
+
         const sheetName = document.getElementById("sheetSelect").value;
         if (!sheetName) {
           setStatus("No hay hoja seleccionada.", "error");
@@ -1255,20 +963,17 @@
         renderTable(sortRows(filteredPlayers));
         setSourceLabel("LOCAL");
 
-        const headers = Object.keys(rows[0] || {});
-        setStatus(
-          `Excel cargado correctamente.\nFilas detectadas: ${rows.length}\nJugadores válidos: ${allPlayers.length}\nModelo: percentiles por posición\nColumnas: ${headers.slice(0,10).join(", ")}`,
-          "ok"
-        );
+        setStatus(`Excel cargado correctamente.\nJugadores válidos: ${allPlayers.length}`, "ok");
       } catch (err) {
         console.error(err);
-        setStatus("Error al cargar la hoja:\n" + (err && err.stack ? err.stack : err), "error");
+        setStatus("Error al cargar la hoja:\n" + (err.message || err), "error");
       }
     }
 
     function initSupabaseFromStorage() {
       const url = localStorage.getItem("supabase_url") || "";
       const key = localStorage.getItem("supabase_key") || "";
+
       document.getElementById("supabaseUrl").value = url;
       document.getElementById("supabaseKey").value = key;
 
@@ -1279,25 +984,21 @@
           supabaseClient = null;
         }
       } catch (err) {
-        console.error("Supabase init error:", err);
+        console.error(err);
         supabaseClient = null;
       }
     }
 
     function saveSupabaseConfig() {
-      const url = document.getElementById("supabaseUrl").value.trim();
-      const key = document.getElementById("supabaseKey").value.trim();
-
-      localStorage.setItem("supabase_url", url);
-      localStorage.setItem("supabase_key", key);
+      localStorage.setItem("supabase_url", document.getElementById("supabaseUrl").value.trim());
+      localStorage.setItem("supabase_key", document.getElementById("supabaseKey").value.trim());
       initSupabaseFromStorage();
-
-      setStatus("Configuración Supabase guardada en el navegador.", "ok");
+      setStatus("Configuración Supabase guardada.", "ok");
     }
 
     function ensureSupabase() {
       if (!supabaseClient) {
-        setStatus("Supabase no está configurado. Guarda primero URL y anon key.", "error");
+        setStatus("Supabase no está configurado. Guarda URL y anon key primero.", "error");
         return false;
       }
       return true;
@@ -1362,8 +1063,8 @@
       }
 
       try {
-        setStatus(`Guardando ${allPlayers.length} jugadores en Supabase con UPSERT...`);
         const payload = allPlayers.map(mapPlayerForSupabase);
+        setStatus(`Guardando ${payload.length} jugadores en Supabase...`);
 
         const chunkSize = 500;
         for (let i = 0; i < payload.length; i += chunkSize) {
@@ -1375,7 +1076,7 @@
           if (error) throw error;
         }
 
-        setStatus(`Guardado completado sin duplicados.\nJugadores procesados: ${allPlayers.length}\nClave única: player_key`, "ok");
+        setStatus(`Guardado completado.\nJugadores procesados: ${payload.length}\nSin duplicados por player_key`, "ok");
       } catch (err) {
         console.error(err);
         setStatus("Error guardando en Supabase:\n" + (err.message || err), "error");
@@ -1387,40 +1088,19 @@
 
       try {
         setStatus("Cargando jugadores desde Supabase...");
-        const allRows = [];
-        let from = 0;
-        const pageSize = 1000;
+        const { data, error } = await supabaseClient
+          .from(SUPABASE_TABLE)
+          .select("*")
+          .order("rating", { ascending: false });
 
-        while (true) {
-          const to = from + pageSize - 1;
-          const { data, error } = await supabaseClient
-            .from(SUPABASE_TABLE)
-            .select("*")
-            .order("rating", { ascending: false })
-            .range(from, to);
+        if (error) throw error;
 
-          if (error) throw error;
-          if (!data || !data.length) break;
-
-          allRows.push(...data);
-          if (data.length < pageSize) break;
-          from += pageSize;
-        }
-
-        if (!allRows.length) {
-          allPlayers = [];
-          filteredPlayers = [];
-          renderTable([]);
-          setSourceLabel("SUPABASE");
-          setStatus("No se encontraron jugadores en Supabase.", "error");
-          return;
-        }
-
-        allPlayers = allRows.map(mapSupabaseRowToPlayer);
+        allPlayers = (data || []).map(mapSupabaseRowToPlayer);
         filteredPlayers = getSortedVisible([...allPlayers]);
         renderTable(sortRows(filteredPlayers));
         setSourceLabel("SUPABASE");
-        setStatus(`Jugadores cargados desde Supabase.\nTotal: ${allPlayers.length}\nSin duplicados por player_key`, "ok");
+
+        setStatus(`Jugadores cargados desde Supabase.\nTotal: ${allPlayers.length}`, "ok");
       } catch (err) {
         console.error(err);
         setStatus("Error cargando desde Supabase:\n" + (err.message || err), "error");
@@ -1435,28 +1115,26 @@
     document.getElementById("loadFromSupabase").addEventListener("click", loadPlayersFromSupabase);
 
     document.getElementById("excelFile").addEventListener("change", function(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
       try {
-        const file = e.target.files && e.target.files[0];
-        if (!file) {
-          setStatus("No se seleccionó archivo.", "error");
-          return;
-        }
-
         if (typeof XLSX === "undefined") {
-          setStatus("La librería XLSX no se ha cargado. Prueba con conexión a internet y Ctrl+F5.", "error");
+          setStatus("La librería XLSX no se ha cargado.", "error");
           return;
         }
 
-        setStatus(`Archivo detectado: ${file.name}\nTamaño: ${file.size} bytes\nLeyendo...`);
+        setStatus(`Archivo detectado: ${file.name}\nLeyendo...`);
 
         const reader = new FileReader();
+
         reader.onload = function(evt) {
           try {
             const data = new Uint8Array(evt.target.result);
             workbookGlobal = XLSX.read(data, { type: "array" });
 
-            if (!workbookGlobal?.SheetNames?.length) {
-              setStatus("El archivo se abrió, pero no se detectaron hojas.", "error");
+            if (!workbookGlobal || !workbookGlobal.SheetNames || !workbookGlobal.SheetNames.length) {
+              setStatus("No se detectaron hojas en el Excel.", "error");
               return;
             }
 
@@ -1464,19 +1142,18 @@
             loadSelectedSheet();
           } catch (err) {
             console.error(err);
-            setStatus("Error procesando el archivo:\n" + (err && err.stack ? err.stack : err), "error");
+            setStatus("Error procesando el Excel:\n" + (err.message || err), "error");
           }
         };
 
-        reader.onerror = function(err) {
-          console.error(err);
-          setStatus("FileReader no pudo leer el archivo.", "error");
+        reader.onerror = function() {
+          setStatus("No se pudo leer el archivo.", "error");
         };
 
         reader.readAsArrayBuffer(file);
       } catch (err) {
         console.error(err);
-        setStatus("Error general:\n" + (err && err.stack ? err.stack : err), "error");
+        setStatus("Error general:\n" + (err.message || err), "error");
       }
     });
 
@@ -1496,11 +1173,7 @@
     window.addEventListener("load", function() {
       attachLiveFilters();
       initSupabaseFromStorage();
-      if (typeof XLSX === "undefined") {
-        setStatus("La página abrió, pero XLSX no cargó. Recarga con Ctrl+F5.", "error");
-      } else {
-        setStatus("Página lista. Selecciona un Excel o carga desde Supabase.");
-      }
+      setStatus("Página lista. Selecciona un Excel o usa Supabase.");
     });
   </script>
 </body>
