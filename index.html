@@ -3,155 +3,268 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scouting App</title>
+  <title>AL AIN SCOUTING PRO</title>
 
-  <!-- XLSX para leer Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-  <!-- Supabase opcional -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f5f7fb;
-      color: #222;
+    :root{
+      --bg:#050505;
+      --panel:#0d0d0f;
+      --panel-2:#121216;
+      --line:#22222a;
+      --muted:#9ca3af;
+      --text:#f5f7fb;
+      --accent:#8b5cf6;
+      --accent-2:#6d28d9;
+      --green:#22c55e;
+      --red:#ef4444;
+      --gold:#f59e0b;
+      --shadow:0 20px 60px rgba(0,0,0,.45);
+      --radius:20px;
     }
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(139,92,246,.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(245,158,11,.10), transparent 20%),
+        linear-gradient(180deg, #050505 0%, #09090b 100%);
+      color:var(--text);
+      min-height:100vh;
     }
-    h1 {
-      margin: 0 0 16px 0;
-      font-size: 28px;
+
+    .shell{max-width:1550px;margin:0 auto;padding:24px}
+    .hero{
+      display:grid;
+      grid-template-columns:1.35fr .95fr;
+      gap:18px;
+      margin-bottom:18px;
     }
-    .card {
-      background: #fff;
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      margin-bottom: 16px;
+    .hero-card,.panel{
+      background:linear-gradient(180deg, rgba(18,18,22,.92) 0%, rgba(12,12,15,.96) 100%);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
     }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: end;
+    .hero-card::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(139,92,246,.24), transparent 28%),
+        radial-gradient(circle at 85% 20%, rgba(245,158,11,.10), transparent 22%);
+      pointer-events:none;
     }
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      min-width: 160px;
-      flex: 1;
+    .hero-inner{position:relative;padding:30px}
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);
+      color:#d4d4d8;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:18px;
     }
-    .field label {
-      font-size: 13px;
-      font-weight: 700;
-      color: #555;
+    h1{margin:0 0 10px 0;font-size:42px;line-height:1.02;letter-spacing:-.03em}
+    .sub{margin:0;color:#c4c8d1;font-size:15px;line-height:1.6;max-width:760px}
+    .hero-stats{margin-top:26px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .mini-stat{
+      padding:16px;border-radius:18px;background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.06);backdrop-filter: blur(8px);
     }
-    .field input,
-    .field select,
-    .field button {
-      padding: 10px 12px;
-      border: 1px solid #d9dfeb;
-      border-radius: 10px;
-      font-size: 14px;
-      background: #fff;
+    .mini-stat .label{
+      color:var(--muted);font-size:12px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;
     }
-    .field button {
-      cursor: pointer;
-      font-weight: 700;
+    .mini-stat .value{font-size:28px;font-weight:800;letter-spacing:-.03em}
+
+    .side-panel{padding:22px;display:flex;flex-direction:column;gap:14px}
+    .side-title{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:#c7cad3;font-weight:800}
+    .status{
+      padding:16px;border-radius:18px;background:#0a0a0d;border:1px solid var(--line);
+      color:#eef2ff;white-space:pre-wrap;line-height:1.5;min-height:115px;
     }
-    .btn-primary {
-      background: #5a2ca0;
-      color: white;
-      border: none;
+    .status.ok{border-color:rgba(34,197,94,.28);background:rgba(34,197,94,.08)}
+    .status.error{border-color:rgba(239,68,68,.28);background:rgba(239,68,68,.08)}
+    .helper{color:#a5acb8;font-size:13px;line-height:1.6}
+
+    .panel{padding:18px;margin-bottom:18px}
+    .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .panel-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
+    .panel-note{color:var(--muted);font-size:13px}
+    .filters{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px}
+    .field{display:flex;flex-direction:column;gap:8px}
+    .field label{
+      font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#aeb4bf;font-weight:700;
     }
-    .btn-secondary {
-      background: #eef2ff;
-      color: #2d3a66;
-      border: none;
+
+    input,select,button{
+      width:100%;border:none;outline:none;border-radius:14px;padding:14px 14px;
+      font-family:inherit;font-size:14px;transition:.18s ease;
     }
-    .status {
-      font-size: 14px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      margin-top: 10px;
-      background: #f3f6fb;
-      color: #333;
-      word-break: break-word;
+    input,select{background:#09090c;border:1px solid #242430;color:#eef2ff}
+    input:focus,select:focus{
+      border-color:rgba(139,92,246,.6);box-shadow:0 0 0 4px rgba(139,92,246,.12);
     }
-    .small {
-      font-size: 12px;
-      color: #666;
+    button{cursor:pointer;font-weight:800;letter-spacing:.01em}
+    .btn-primary{
+      background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2) 100%);
+      color:white;box-shadow:0 10px 30px rgba(109,40,217,.35);
     }
-    .table-wrap {
-      overflow: auto;
-      max-height: 70vh;
-      border: 1px solid #e6ebf5;
-      border-radius: 12px;
+    .btn-primary:hover{transform:translateY(-1px);filter:brightness(1.05)}
+    .btn-secondary{background:#111117;color:#e5e7eb;border:1px solid #262633}
+    .btn-secondary:hover{background:#171720}
+
+    .summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+    .summary-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.035) 0%, rgba(255,255,255,.015) 100%);
+      border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      min-width: 1200px;
+    .summary-card .k{
+      color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px;
     }
-    thead th {
-      position: sticky;
-      top: 0;
-      background: #f1f4fa;
-      z-index: 1;
-      cursor: pointer;
-      text-align: left;
-      font-size: 13px;
-      padding: 10px;
-      border-bottom: 1px solid #dbe3f0;
-      white-space: nowrap;
+    .summary-card .v{font-size:26px;font-weight:800;letter-spacing:-.03em}
+    .summary-card .s{margin-top:6px;font-size:12px;color:#c6cbd6}
+
+    .table-wrap{
+      overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.06);
+      background:#08080b;max-height:74vh;
     }
-    tbody td {
-      padding: 10px;
-      border-bottom: 1px solid #eef2f7;
-      font-size: 13px;
-      white-space: nowrap;
+    table{width:100%;border-collapse:collapse;min-width:1650px}
+    thead th{
+      position:sticky;top:0;z-index:2;background:rgba(14,14,18,.98);
+      backdrop-filter:blur(10px);border-bottom:1px solid #262631;color:#f3f4f6;
+      font-size:12px;text-transform:uppercase;letter-spacing:.08em;text-align:left;
+      padding:14px 12px;cursor:pointer;
     }
-    tbody tr:hover {
-      background: #fafcff;
+    tbody td{
+      padding:13px 12px;border-bottom:1px solid rgba(255,255,255,.05);
+      color:#e8ebf1;font-size:13px;white-space:nowrap;
     }
-    .good {
-      color: #17803d;
-      font-weight: 700;
+    tbody tr:hover{background:rgba(255,255,255,.03)}
+    .player-cell{display:flex;flex-direction:column;gap:4px}
+    .player-name{font-weight:700;color:white}
+    .player-sub{font-size:12px;color:#9ca3af}
+    .pill{
+      display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:6px 10px;border-radius:999px;
+      background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.28);color:#ddd6fe;font-size:12px;font-weight:800;letter-spacing:.04em;
     }
-    .bad {
-      color: #b42318;
-      font-weight: 700;
+    .rank-badge{
+      display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:6px 10px;border-radius:999px;
+      font-size:12px;font-weight:900;letter-spacing:.03em;border:1px solid rgba(255,255,255,.08);background:#12121a;color:#d1d5db;
     }
-    .pill {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      background: #eef2ff;
-      color: #3b3f8c;
+    .rank-top10{
+      background:linear-gradient(135deg, rgba(245,158,11,.22) 0%, rgba(139,92,246,.18) 100%);
+      border-color:rgba(245,158,11,.42);color:#fde68a;box-shadow:0 8px 24px rgba(245,158,11,.18);
+    }
+    .rank-top3{
+      background:linear-gradient(135deg, rgba(245,158,11,.34) 0%, rgba(255,255,255,.12) 100%);
+      border-color:rgba(245,158,11,.65);color:#fff3bf;box-shadow:0 10px 26px rgba(245,158,11,.24);
+    }
+    .metric-chip{
+      display:inline-flex;align-items:center;justify-content:center;min-width:72px;padding:7px 10px;border-radius:12px;
+      font-weight:800;letter-spacing:.01em;border:1px solid rgba(255,255,255,.06);
+    }
+    .metric-good{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.34);color:#86efac}
+    .metric-mid{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.30);color:#fcd34d}
+    .metric-bad{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.32);color:#fca5a5}
+    .rating-elite{
+      background:linear-gradient(135deg, rgba(245,158,11,.22) 0%, rgba(139,92,246,.16) 100%) !important;
+      box-shadow:inset 0 0 0 1px rgba(245,158,11,.35);
+    }
+    .top10-row{background:linear-gradient(90deg, rgba(245,158,11,.06) 0%, rgba(139,92,246,.04) 100%)}
+    .top3-row{background:linear-gradient(90deg, rgba(245,158,11,.12) 0%, rgba(139,92,246,.08) 100%)}
+    .top10-row:hover,.top3-row:hover{
+      background:linear-gradient(90deg, rgba(245,158,11,.16) 0%, rgba(139,92,246,.10) 100%);
+    }
+    .empty{padding:28px;text-align:center;color:#9ca3af}
+
+    @media (max-width: 1260px){
+      .hero{grid-template-columns:1fr}
+      .filters{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media (max-width: 760px){
+      .shell{padding:14px}
+      h1{font-size:30px}
+      .hero-inner{padding:22px}
+      .filters,.summary-grid,.hero-stats{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Scouting App</h1>
+  <div class="shell">
 
-    <div class="card">
-      <div class="row">
-        <div class="field" style="min-width:280px;">
-          <label>Cargar Excel</label>
-          <input type="file" id="excelFile" accept=".xlsx,.xls" />
+    <section class="hero">
+      <div class="hero-card">
+        <div class="hero-inner">
+          <div class="eyebrow">AL AIN SCOUTING · PRO MODEL</div>
+          <h1>Positional percentile rating engine</h1>
+          <p class="sub">
+            Esta versión calcula el rating de manera mucho más real: cada jugador se compara contra su propia
+            posición, usando pesos específicos por rol y percentiles. Ya no hay “10” artificiales por acumulación
+            de números absolutos.
+          </p>
+
+          <div class="hero-stats">
+            <div class="mini-stat">
+              <div class="label">Jugadores</div>
+              <div class="value" id="heroPlayers">0</div>
+            </div>
+            <div class="mini-stat">
+              <div class="label">Posiciones</div>
+              <div class="value" id="heroPositions">0</div>
+            </div>
+            <div class="mini-stat">
+              <div class="label">Mejor rating</div>
+              <div class="value" id="heroBest">0.00</div>
+            </div>
+            <div class="mini-stat">
+              <div class="label">Modelo</div>
+              <div class="value" id="heroModel">PRO</div>
+            </div>
+          </div>
         </div>
+      </div>
 
+      <div class="hero-card">
+        <div class="side-panel">
+          <div class="side-title">Carga de archivo</div>
+
+          <div class="field">
+            <label>Selecciona Excel</label>
+            <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" />
+          </div>
+
+          <div class="field">
+            <label>Hoja</label>
+            <select id="sheetSelect"></select>
+          </div>
+
+          <button class="btn-primary" id="reloadSheet">Cargar hoja seleccionada</button>
+
+          <div id="status" class="status">Esperando archivo...</div>
+
+          <div class="helper">
+            Rating PRO = percentiles por posición + pesos por rol + ajuste suave por minutos.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Filtros y navegación</div>
+          <div class="panel-note">Ahora con rating profesional por posición.</div>
+        </div>
+      </div>
+
+      <div class="filters">
         <div class="field">
           <label>Posición</label>
           <select id="filterPosition">
@@ -171,12 +284,12 @@
 
         <div class="field">
           <label>Equipo</label>
-          <input type="text" id="filterTeam" placeholder="Filtrar por equipo" />
+          <input type="text" id="filterTeam" placeholder="Ej: Al Ain" />
         </div>
 
         <div class="field">
           <label>Edad máxima</label>
-          <input type="number" id="filterAge" placeholder="Ej: 24" />
+          <input type="number" id="filterAge" placeholder="Ej: 23" />
         </div>
 
         <div class="field">
@@ -189,54 +302,66 @@
           <input type="number" step="0.1" id="filterRating" placeholder="Ej: 7.5" />
         </div>
 
-        <div class="field" style="max-width:180px;">
+        <div class="field">
+          <label>Hoja actual</label>
+          <input type="text" id="currentSheet" readonly placeholder="Sin hoja cargada" />
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
           <button class="btn-primary" id="applyFilters">Aplicar filtros</button>
         </div>
 
-        <div class="field" style="max-width:160px;">
-          <button class="btn-secondary" id="clearFilters">Limpiar</button>
-        </div>
-      </div>
-
-      <div class="status" id="status">
-        Esperando Excel...
-      </div>
-      <div class="small" style="margin-top:8px;">
-        Supabase es opcional. Si falla, la app sigue funcionando igual con Excel local.
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="row">
         <div class="field">
-          <label>Supabase URL</label>
-          <input type="text" id="supabaseUrl" placeholder="https://xxxx.supabase.co" />
-        </div>
-        <div class="field">
-          <label>Supabase anon key</label>
-          <input type="text" id="supabaseKey" placeholder="Pega aquí tu anon key" />
-        </div>
-        <div class="field" style="max-width:180px;">
-          <button class="btn-secondary" id="saveSupabaseConfig">Guardar config</button>
+          <label>&nbsp;</label>
+          <button class="btn-secondary" id="clearFilters">Limpiar filtros</button>
         </div>
       </div>
-      <div class="small" style="margin-top:8px;">
-        Se guarda en el navegador. No rompe la carga del Excel aunque no pongas nada.
-      </div>
-    </div>
+    </section>
 
-    <div class="card">
+    <section class="summary-grid">
+      <div class="summary-card">
+        <div class="k">Jugadores mostrados</div>
+        <div class="v" id="sumVisible">0</div>
+        <div class="s">tras aplicar filtros</div>
+      </div>
+      <div class="summary-card">
+        <div class="k">Edad media</div>
+        <div class="v" id="sumAge">0.0</div>
+        <div class="s">solo sobre los visibles</div>
+      </div>
+      <div class="summary-card">
+        <div class="k">Rating medio</div>
+        <div class="v" id="sumRating">0.00</div>
+        <div class="s">percentiles por rol</div>
+      </div>
+      <div class="summary-card">
+        <div class="k">Top jugador</div>
+        <div class="v" id="sumTop">—</div>
+        <div class="s" id="sumTopSub">sin datos</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Tabla de jugadores</div>
+          <div class="panel-note">Haz clic en los encabezados para ordenar.</div>
+        </div>
+      </div>
+
       <div class="table-wrap">
         <table id="playersTable">
           <thead>
             <tr>
+              <th data-sort="__rank">Top</th>
               <th data-sort="Player">Jugador</th>
               <th data-sort="Team">Equipo</th>
               <th data-sort="Position_main">Posición</th>
               <th data-sort="Age">Edad</th>
               <th data-sort="Minutes played">Min</th>
               <th data-sort="Rating">Rating</th>
-              <th data-sort="WeightedRating">Weighted</th>
+              <th data-sort="PosPercentile">Pct Pos</th>
               <th data-sort="Goals per 90">Goals/90</th>
               <th data-sort="Assists per 90">Assists/90</th>
               <th data-sort="xG per 90">xG/90</th>
@@ -248,546 +373,587 @@
               <th data-sort="Aerial duels won, %">Aerial Won %</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <tr><td colspan="17" class="empty">Carga un Excel para empezar.</td></tr>
+          </tbody>
         </table>
       </div>
-    </div>
+    </section>
   </div>
 
-  <script>
-    // =========================
-    // VARIABLES GLOBALES
-    // =========================
-    let allPlayers = [];
-    let filteredPlayers = [];
-    let sortKey = "WeightedRating";
-    let sortAsc = false;
-    let supabaseClient = null;
+<script>
+let workbookGlobal = null;
+let allPlayers = [];
+let filteredPlayers = [];
+let sortKey = "Rating";
+let sortAsc = false;
 
-    // =========================
-    // HELPERS
-    // =========================
-    function setStatus(msg) {
-      document.getElementById("status").textContent = msg;
-    }
+const POSITION_MODELS = {
+  RB: [
+    ["Progressive runs per 90", 1.45],
+    ["Dribbles per 90", 1.20],
+    ["Crosses per 90", 1.10],
+    ["Assists per 90", 1.00],
+    ["Defensive duels won, %", 1.35],
+    ["xA per 90", 0.95]
+  ],
+  LB: [
+    ["Progressive runs per 90", 1.45],
+    ["Dribbles per 90", 1.20],
+    ["Crosses per 90", 1.10],
+    ["Assists per 90", 1.00],
+    ["Defensive duels won, %", 1.35],
+    ["xA per 90", 0.95]
+  ],
+  CB: [
+    ["Defensive duels won, %", 1.55],
+    ["Aerial duels won, %", 1.45],
+    ["Minutes played", 0.50],
+    ["xG per 90", 0.15],
+    ["Crosses per 90", 0.05],
+    ["Dribbles per 90", 0.10]
+  ],
+  DMF: [
+    ["Defensive duels won, %", 1.35],
+    ["Aerial duels won, %", 0.90],
+    ["xA per 90", 0.45],
+    ["Assists per 90", 0.35],
+    ["Dribbles per 90", 0.55],
+    ["Progressive runs per 90", 0.85]
+  ],
+  MC: [
+    ["Assists per 90", 1.10],
+    ["xA per 90", 1.15],
+    ["Dribbles per 90", 0.85],
+    ["Progressive runs per 90", 1.00],
+    ["Defensive duels won, %", 0.65],
+    ["Goals per 90", 0.75]
+  ],
+  AMF: [
+    ["Goals per 90", 1.10],
+    ["Assists per 90", 1.15],
+    ["xG per 90", 1.05],
+    ["xA per 90", 1.20],
+    ["Dribbles per 90", 1.10],
+    ["Progressive runs per 90", 0.80]
+  ],
+  RW: [
+    ["Goals per 90", 1.00],
+    ["Assists per 90", 1.05],
+    ["xG per 90", 1.00],
+    ["xA per 90", 1.00],
+    ["Dribbles per 90", 1.35],
+    ["Progressive runs per 90", 1.30]
+  ],
+  LW: [
+    ["Goals per 90", 1.00],
+    ["Assists per 90", 1.05],
+    ["xG per 90", 1.00],
+    ["xA per 90", 1.00],
+    ["Dribbles per 90", 1.35],
+    ["Progressive runs per 90", 1.30]
+  ],
+  CF: [
+    ["Goals per 90", 1.55],
+    ["xG per 90", 1.30],
+    ["Dribbles per 90", 0.75],
+    ["Progressive runs per 90", 0.70],
+    ["Aerial duels won, %", 0.80],
+    ["Assists per 90", 0.55]
+  ],
+  ST: [
+    ["Goals per 90", 1.55],
+    ["xG per 90", 1.30],
+    ["Dribbles per 90", 0.75],
+    ["Progressive runs per 90", 0.70],
+    ["Aerial duels won, %", 0.80],
+    ["Assists per 90", 0.55]
+  ]
+};
 
-    function escapeHtml(str) {
-      return String(str ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
+function setStatus(msg, type="") {
+  const el = document.getElementById("status");
+  el.className = "status" + (type ? " " + type : "");
+  el.textContent = msg;
+}
 
-    function toNumber(value) {
-      if (value === null || value === undefined || value === "") return 0;
-      if (typeof value === "number") return isFinite(value) ? value : 0;
-      const cleaned = String(value).replace(/,/g, ".").replace(/[^\d.\-]/g, "");
-      const n = parseFloat(cleaned);
-      return isNaN(n) ? 0 : n;
-    }
+function safe(v) {
+  return String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
-    function formatNum(value) {
-      const n = toNumber(value);
-      if (!isFinite(n)) return "";
-      if (Math.abs(n - Math.round(n)) < 0.0001) return String(Math.round(n));
-      return n.toFixed(2);
-    }
+function toNumber(value) {
+  if (value === null || value === undefined || value === "") return 0;
+  if (typeof value === "number") return isFinite(value) ? value : 0;
+  const cleaned = String(value).replace(/,/g, ".").replace(/[^\d.\-]/g, "");
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
+}
 
-    function getFirstExisting(obj, candidates) {
-      for (const key of candidates) {
-        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
-          return obj[key];
-        }
-      }
-      return "";
-    }
+function formatNum(value, digits=2) {
+  const n = toNumber(value);
+  if (!isFinite(n)) return "";
+  return n.toFixed(digits);
+}
 
-    function normalizePosition(raw) {
-      const value = String(raw || "").toUpperCase().trim();
+function getFirstExisting(obj, candidates) {
+  for (const key of candidates) {
+    if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") return obj[key];
+  }
+  return "";
+}
 
-      if (!value) return "";
+function normalizePosition(raw) {
+  const value = String(raw || "").toUpperCase().trim();
+  if (!value) return "";
+  const first = value.split(",")[0].trim();
 
-      // Si viene una lista separada por coma, usamos la primera
-      const first = value.split(",")[0].trim();
+  if (["RB","RWB"].includes(first)) return "RB";
+  if (["LB","LWB"].includes(first)) return "LB";
+  if (["CB","RCB","LCB"].includes(first)) return "CB";
+  if (["DMF","DM","CDM"].includes(first)) return "DMF";
+  if (["MC","CM","CMF"].includes(first)) return "MC";
+  if (["AMF","AM","CAM"].includes(first)) return "AMF";
+  if (["RW","RWF"].includes(first)) return "RW";
+  if (["LW","LWF"].includes(first)) return "LW";
+  if (["CF"].includes(first)) return "CF";
+  if (["ST"].includes(first)) return "ST";
+  return first;
+}
 
-      if (["RB", "RWB"].includes(first)) return "RB";
-      if (["LB", "LWB"].includes(first)) return "LB";
-      if (["RCB", "LCB", "CB"].includes(first)) return "CB";
-      if (["DMF", "CDM", "DM"].includes(first)) return "DMF";
-      if (["CMF", "CM", "MC"].includes(first)) return "MC";
-      if (["AMF", "CAM", "AM"].includes(first)) return "AMF";
-      if (["RW", "RWF"].includes(first)) return "RW";
-      if (["LW", "LWF"].includes(first)) return "LW";
-      if (["CF"].includes(first)) return "CF";
-      if (["ST"].includes(first)) return "ST";
+function fillSheetSelect(workbook) {
+  const select = document.getElementById("sheetSelect");
+  select.innerHTML = "";
+  workbook.SheetNames.forEach((name, idx) => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = `${idx + 1}. ${name}`;
+    select.appendChild(opt);
+  });
+}
 
-      return first;
-    }
-
-    function percentileRank(arr, value) {
-      if (!arr.length) return 0.5;
-      const sorted = [...arr].sort((a, b) => a - b);
-      let count = 0;
-      for (const n of sorted) {
-        if (n <= value) count++;
-      }
-      return count / sorted.length;
-    }
-
-    function scoreToTen(p) {
-      return +(4 + p * 6).toFixed(2); // 4.00 a 10.00
-    }
-
-    // =========================
-    // MÉTRICAS POR POSICIÓN
-    // =========================
-    const POSITION_MODELS = {
-      RB: {
-        metrics: [
-          { key: "Progressive runs per 90", weight: 1.5 },
-          { key: "Dribbles per 90", weight: 1.2 },
-          { key: "Crosses per 90", weight: 1.0 },
-          { key: "Assists per 90", weight: 1.0 },
-          { key: "Defensive duels won, %", weight: 1.4 },
-          { key: "Interceptions per 90", weight: 1.1 }
-        ]
-      },
-      LB: {
-        metrics: [
-          { key: "Progressive runs per 90", weight: 1.5 },
-          { key: "Dribbles per 90", weight: 1.2 },
-          { key: "Crosses per 90", weight: 1.0 },
-          { key: "Assists per 90", weight: 1.0 },
-          { key: "Defensive duels won, %", weight: 1.4 },
-          { key: "Interceptions per 90", weight: 1.1 }
-        ]
-      },
-      CB: {
-        metrics: [
-          { key: "Defensive duels won, %", weight: 1.5 },
-          { key: "Aerial duels won, %", weight: 1.5 },
-          { key: "Interceptions per 90", weight: 1.2 },
-          { key: "PAdj Sliding tackles", weight: 1.0 },
-          { key: "Accurate passes, %", weight: 1.0 },
-          { key: "Progressive passes per 90", weight: 1.0 }
-        ]
-      },
-      DMF: {
-        metrics: [
-          { key: "Defensive duels won, %", weight: 1.3 },
-          { key: "Interceptions per 90", weight: 1.3 },
-          { key: "Accurate passes, %", weight: 1.2 },
-          { key: "Passes to final third per 90", weight: 1.1 },
-          { key: "Progressive passes per 90", weight: 1.1 },
-          { key: "Aerial duels won, %", weight: 1.0 }
-        ]
-      },
-      MC: {
-        metrics: [
-          { key: "Assists per 90", weight: 1.0 },
-          { key: "xA per 90", weight: 1.2 },
-          { key: "Passes to final third per 90", weight: 1.2 },
-          { key: "Progressive passes per 90", weight: 1.2 },
-          { key: "Dribbles per 90", weight: 1.0 },
-          { key: "Interceptions per 90", weight: 0.9 }
-        ]
-      },
-      AMF: {
-        metrics: [
-          { key: "Goals per 90", weight: 1.1 },
-          { key: "Assists per 90", weight: 1.2 },
-          { key: "xG per 90", weight: 1.1 },
-          { key: "xA per 90", weight: 1.2 },
-          { key: "Dribbles per 90", weight: 1.1 },
-          { key: "Passes to final third per 90", weight: 1.0 }
-        ]
-      },
-      RW: {
-        metrics: [
-          { key: "Goals per 90", weight: 1.0 },
-          { key: "Assists per 90", weight: 1.1 },
-          { key: "xG per 90", weight: 1.0 },
-          { key: "xA per 90", weight: 1.0 },
-          { key: "Dribbles per 90", weight: 1.4 },
-          { key: "Progressive runs per 90", weight: 1.3 }
-        ]
-      },
-      LW: {
-        metrics: [
-          { key: "Goals per 90", weight: 1.0 },
-          { key: "Assists per 90", weight: 1.1 },
-          { key: "xG per 90", weight: 1.0 },
-          { key: "xA per 90", weight: 1.0 },
-          { key: "Dribbles per 90", weight: 1.4 },
-          { key: "Progressive runs per 90", weight: 1.3 }
-        ]
-      },
-      CF: {
-        metrics: [
-          { key: "Goals per 90", weight: 1.5 },
-          { key: "xG per 90", weight: 1.3 },
-          { key: "Shots per 90", weight: 1.2 },
-          { key: "Touches in box per 90", weight: 1.2 },
-          { key: "Aerial duels won, %", weight: 0.9 },
-          { key: "Dribbles per 90", weight: 0.8 }
-        ]
-      },
-      ST: {
-        metrics: [
-          { key: "Goals per 90", weight: 1.5 },
-          { key: "xG per 90", weight: 1.3 },
-          { key: "Shots per 90", weight: 1.2 },
-          { key: "Touches in box per 90", weight: 1.2 },
-          { key: "Aerial duels won, %", weight: 0.9 },
-          { key: "Dribbles per 90", weight: 0.8 }
-        ]
-      }
+function normalizeRows(rows) {
+  return rows.map((row, idx) => {
+    const item = {
+      id: idx + 1,
+      raw: row,
+      Player: getFirstExisting(row, ["Player", "Jugador", "Name"]),
+      Team: getFirstExisting(row, ["Team", "Equipo", "Squad"]),
+      Position: getFirstExisting(row, ["Position", "Posición", "Pos"]),
+      Age: toNumber(getFirstExisting(row, ["Age", "Edad"])),
+      ["Minutes played"]: toNumber(getFirstExisting(row, ["Minutes played", "Minutes", "Minutos"])),
+      ["Goals per 90"]: toNumber(getFirstExisting(row, ["Goals per 90", "Goals/90", "Goles por 90"])),
+      ["Assists per 90"]: toNumber(getFirstExisting(row, ["Assists per 90", "Assists/90", "Asistencias por 90"])),
+      ["xG per 90"]: toNumber(getFirstExisting(row, ["xG per 90", "xG/90"])),
+      ["xA per 90"]: toNumber(getFirstExisting(row, ["xA per 90", "xA/90"])),
+      ["Dribbles per 90"]: toNumber(getFirstExisting(row, ["Dribbles per 90", "Dribbles/90"])),
+      ["Progressive runs per 90"]: toNumber(getFirstExisting(row, ["Progressive runs per 90", "Prog runs/90"])),
+      ["Crosses per 90"]: toNumber(getFirstExisting(row, ["Crosses per 90", "Crosses/90"])),
+      ["Defensive duels won, %"]: toNumber(getFirstExisting(row, ["Defensive duels won, %", "Def duels won %"])),
+      ["Aerial duels won, %"]: toNumber(getFirstExisting(row, ["Aerial duels won, %", "Aerial won %"]))
     };
 
-    // =========================
-    // SUPABASE OPCIONAL
-    // =========================
-    function initSupabaseFromStorage() {
-      const url = localStorage.getItem("supabase_url") || "";
-      const key = localStorage.getItem("supabase_key") || "";
+    item.Position_main = normalizePosition(item.Position);
+    item.BaseScore = 0;
+    item.PosPercentile = 0;
+    item.Rating = 0;
 
-      document.getElementById("supabaseUrl").value = url;
-      document.getElementById("supabaseKey").value = key;
+    return item;
+  }).filter(p => p.Player);
+}
 
-      try {
-        if (url && key && window.supabase && window.supabase.createClient) {
-          supabaseClient = window.supabase.createClient(url, key);
-          console.log("Supabase inicializado");
-        } else {
-          supabaseClient = null;
-        }
-      } catch (err) {
-        console.error("Supabase init error:", err);
-        supabaseClient = null;
+function percentileRank(arr, value) {
+  if (!arr.length) return 0.5;
+  const sorted = [...arr].sort((a,b)=>a-b);
+  let count = 0;
+  for (const n of sorted) {
+    if (n <= value) count++;
+  }
+  return count / sorted.length;
+}
+
+function calculateProRatings(players) {
+  const groups = {};
+  for (const p of players) {
+    const pos = p.Position_main || "OTHER";
+    if (!groups[pos]) groups[pos] = [];
+    groups[pos].push(p);
+  }
+
+  for (const pos in groups) {
+    const group = groups[pos];
+    const model = POSITION_MODELS[pos];
+
+    if (!model || group.length === 1) {
+      for (const p of group) {
+        const minuteBoost = Math.min((p["Minutes played"] || 0) / 900, 1.15);
+        p.BaseScore = minuteBoost;
+        p.PosPercentile = 0.50;
+        p.Rating = +(6.3 + Math.min(minuteBoost,1) * 0.4).toFixed(2);
       }
+      continue;
     }
 
-    document.getElementById("saveSupabaseConfig").addEventListener("click", () => {
-      const url = document.getElementById("supabaseUrl").value.trim();
-      const key = document.getElementById("supabaseKey").value.trim();
+    const metricArrays = {};
+    for (const [metric] of model) {
+      metricArrays[metric] = group.map(p => toNumber(p[metric]));
+    }
 
-      localStorage.setItem("supabase_url", url);
-      localStorage.setItem("supabase_key", key);
+    for (const p of group) {
+      let totalWeight = 0;
+      let score = 0;
 
-      initSupabaseFromStorage();
-      setStatus("Configuración Supabase guardada. La carga de Excel sigue siendo local.");
+      for (const [metric, weight] of model) {
+        const value = toNumber(p[metric]);
+        const pct = percentileRank(metricArrays[metric], value);
+        score += pct * weight;
+        totalWeight += weight;
+      }
+
+      const minuteFactor = Math.max(0.82, Math.min((p["Minutes played"] || 0) / 900, 1.08));
+      p.BaseScore = totalWeight ? (score / totalWeight) * minuteFactor : 0.5;
+    }
+
+    const sorted = [...group].sort((a,b) => b.BaseScore - a.BaseScore);
+    const len = sorted.length;
+
+    sorted.forEach((p, idx) => {
+      const pct = len === 1 ? 0.5 : 1 - (idx / (len - 1));
+      p.PosPercentile = pct;
+
+      let rating = 5.20 + pct * 4.15;
+
+      const minutes = p["Minutes played"] || 0;
+      if (minutes < 450) rating -= 0.22;
+      else if (minutes < 700) rating -= 0.10;
+
+      p.Rating = +Math.max(4.80, Math.min(9.35, rating)).toFixed(2);
     });
+  }
+}
 
-    // =========================
-    // LECTURA EXCEL
-    // =========================
-    document.getElementById("excelFile").addEventListener("change", handleFileUpload);
+function getMetricClass(value, key) {
+  const n = toNumber(value);
 
-    function handleFileUpload(event) {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
+  if (key === "Rating") {
+    if (n >= 8.6) return "metric-good rating-elite";
+    if (n >= 7.1) return "metric-mid";
+    return "metric-bad";
+  }
 
-      setStatus("Leyendo Excel...");
+  if (key === "PosPercentile") {
+    if (n >= 0.80) return "metric-good";
+    if (n >= 0.45) return "metric-mid";
+    return "metric-bad";
+  }
 
-      const reader = new FileReader();
+  const percentKeys = new Set(["Defensive duels won, %","Aerial duels won, %"]);
+  if (percentKeys.has(key)) {
+    if (n >= 60) return "metric-good";
+    if (n >= 48) return "metric-mid";
+    return "metric-bad";
+  }
 
-      reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: "array" });
+  if (key === "Goals per 90") {
+    if (n >= 0.45) return "metric-good";
+    if (n >= 0.18) return "metric-mid";
+    return "metric-bad";
+  }
+  if (key === "Assists per 90") {
+    if (n >= 0.22) return "metric-good";
+    if (n >= 0.08) return "metric-mid";
+    return "metric-bad";
+  }
+  if (key === "xG per 90") {
+    if (n >= 0.35) return "metric-good";
+    if (n >= 0.16) return "metric-mid";
+    return "metric-bad";
+  }
+  if (key === "xA per 90") {
+    if (n >= 0.18) return "metric-good";
+    if (n >= 0.07) return "metric-mid";
+    return "metric-bad";
+  }
+  if (key === "Dribbles per 90") {
+    if (n >= 2.10) return "metric-good";
+    if (n >= 0.90) return "metric-mid";
+    return "metric-bad";
+  }
+  if (key === "Progressive runs per 90") {
+    if (n >= 2.00) return "metric-good";
+    if (n >= 0.80) return "metric-mid";
+    return "metric-bad";
+  }
+  if (key === "Crosses per 90") {
+    if (n >= 2.20) return "metric-good";
+    if (n >= 0.80) return "metric-mid";
+    return "metric-bad";
+  }
 
-          if (!workbook.SheetNames.length) {
-            setStatus("El Excel no contiene hojas.");
-            return;
-          }
+  return "metric-mid";
+}
 
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+function metricPill(value, key, digits=2, isPercentile=false) {
+  let show = formatNum(value, digits);
+  if (isPercentile) show = Math.round(toNumber(value) * 100) + "%";
+  return `<span class="metric-chip ${getMetricClass(value, key)}">${show}</span>`;
+}
 
-          if (!rows.length) {
-            setStatus("La hoja está vacía.");
-            return;
-          }
+function renderTable(rows) {
+  const tbody = document.querySelector("#playersTable tbody");
+  tbody.innerHTML = "";
 
-          allPlayers = normalizeRows(rows);
-          calculateRatings(allPlayers);
-          filteredPlayers = [...allPlayers];
-          renderTable(sortPlayers(filteredPlayers));
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="17" class="empty">No hay jugadores que cumplan los filtros.</td></tr>`;
+    updateSummary([]);
+    return;
+  }
 
-          setStatus(`Excel cargado correctamente. ${allPlayers.length} jugadores leídos.`);
-          trySaveToSupabase(allPlayers);
-        } catch (error) {
-          console.error(error);
-          setStatus("Error al leer el Excel. Revisa consola del navegador.");
-        }
-      };
+  const rankedRows = [...rows].sort((a,b) => toNumber(b.Rating) - toNumber(a.Rating));
 
-      reader.onerror = function(err) {
-        console.error(err);
-        setStatus("No se pudo leer el archivo.");
-      };
+  for (const p of rows) {
+    const rank = rankedRows.findIndex(x => x.id === p.id) + 1;
+    const topClass = rank <= 3 ? "top3-row" : (rank <= 10 ? "top10-row" : "");
+    const badgeClass = rank <= 3 ? "rank-badge rank-top3" : (rank <= 10 ? "rank-badge rank-top10" : "rank-badge");
 
-      reader.readAsArrayBuffer(file);
+    const tr = document.createElement("tr");
+    if (topClass) tr.className = topClass;
+
+    tr.innerHTML = `
+      <td><span class="${badgeClass}">#${rank}</span></td>
+      <td>
+        <div class="player-cell">
+          <div class="player-name">${safe(p.Player)}</div>
+          <div class="player-sub">${safe(p.Team)} · ${safe(p.Position_main || p.Position || "-")}</div>
+        </div>
+      </td>
+      <td>${safe(p.Team)}</td>
+      <td><span class="pill">${safe(p.Position_main || p.Position || "-")}</span></td>
+      <td>${formatNum(p.Age, 0)}</td>
+      <td>${formatNum(p["Minutes played"], 0)}</td>
+      <td>${metricPill(p.Rating, "Rating")}</td>
+      <td>${metricPill(p.PosPercentile, "PosPercentile", 0, true)}</td>
+      <td>${metricPill(p["Goals per 90"], "Goals per 90")}</td>
+      <td>${metricPill(p["Assists per 90"], "Assists per 90")}</td>
+      <td>${metricPill(p["xG per 90"], "xG per 90")}</td>
+      <td>${metricPill(p["xA per 90"], "xA per 90")}</td>
+      <td>${metricPill(p["Dribbles per 90"], "Dribbles per 90")}</td>
+      <td>${metricPill(p["Progressive runs per 90"], "Progressive runs per 90")}</td>
+      <td>${metricPill(p["Crosses per 90"], "Crosses per 90")}</td>
+      <td>${metricPill(p["Defensive duels won, %"], "Defensive duels won, %")}</td>
+      <td>${metricPill(p["Aerial duels won, %"], "Aerial duels won, %")}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  updateSummary(rows);
+}
+
+function updateSummary(rows) {
+  document.getElementById("sumVisible").textContent = rows.length;
+
+  if (!rows.length) {
+    document.getElementById("sumAge").textContent = "0.0";
+    document.getElementById("sumRating").textContent = "0.00";
+    document.getElementById("sumTop").textContent = "—";
+    document.getElementById("sumTopSub").textContent = "sin datos";
+    document.getElementById("heroPlayers").textContent = "0";
+    document.getElementById("heroPositions").textContent = "0";
+    document.getElementById("heroBest").textContent = "0.00";
+    return;
+  }
+
+  const avgAge = rows.reduce((a,b)=>a+toNumber(b.Age),0) / rows.length;
+  const avgRating = rows.reduce((a,b)=>a+toNumber(b.Rating),0) / rows.length;
+  const top = [...rows].sort((a,b)=>toNumber(b.Rating)-toNumber(a.Rating))[0];
+  const positions = new Set(rows.map(r => r.Position_main).filter(Boolean)).size;
+
+  document.getElementById("sumAge").textContent = avgAge.toFixed(1);
+  document.getElementById("sumRating").textContent = avgRating.toFixed(2);
+  document.getElementById("sumTop").textContent = top.Player || "—";
+  document.getElementById("sumTopSub").textContent = `${top.Team || ""} · ${top.Position_main || ""} · ${top.Rating.toFixed(2)}`;
+  document.getElementById("heroPlayers").textContent = rows.length;
+  document.getElementById("heroPositions").textContent = positions;
+  document.getElementById("heroBest").textContent = top.Rating.toFixed(2);
+}
+
+function sortRows(rows) {
+  const arr = [...rows];
+  arr.sort((a,b) => {
+    if (sortKey === "__rank") {
+      const ranked = [...rows].sort((x,y)=>toNumber(y.Rating)-toNumber(x.Rating));
+      const ra = ranked.findIndex(x => x.id === a.id);
+      const rb = ranked.findIndex(x => x.id === b.id);
+      return sortAsc ? (ra - rb) : (rb - ra);
     }
 
-    function normalizeRows(rows) {
-      return rows.map((row, idx) => {
-        const player = {
-          raw: row,
-          id: idx + 1,
-          Player: getFirstExisting(row, ["Player", "Jugador", "Name"]),
-          Team: getFirstExisting(row, ["Team", "Equipo", "Squad"]),
-          Position: getFirstExisting(row, ["Position", "Posición", "Pos"]),
-          Age: toNumber(getFirstExisting(row, ["Age", "Edad"])),
-          ["Minutes played"]: toNumber(getFirstExisting(row, ["Minutes played", "Minutes", "Minutos"])),
-          ["Goals per 90"]: toNumber(getFirstExisting(row, ["Goals per 90", "Goles por 90", "Goals/90"])),
-          ["Assists per 90"]: toNumber(getFirstExisting(row, ["Assists per 90", "Asistencias por 90", "Assists/90"])),
-          ["xG per 90"]: toNumber(getFirstExisting(row, ["xG per 90", "xG/90"])),
-          ["xA per 90"]: toNumber(getFirstExisting(row, ["xA per 90", "xA/90"])),
-          ["Shots per 90"]: toNumber(getFirstExisting(row, ["Shots per 90", "Shots/90", "Remates por 90"])),
-          ["Touches in box per 90"]: toNumber(getFirstExisting(row, ["Touches in box per 90", "Touches in box/90"])),
-          ["Dribbles per 90"]: toNumber(getFirstExisting(row, ["Dribbles per 90", "Dribbles/90"])),
-          ["Progressive runs per 90"]: toNumber(getFirstExisting(row, ["Progressive runs per 90", "Prog runs/90"])),
-          ["Crosses per 90"]: toNumber(getFirstExisting(row, ["Crosses per 90", "Crosses/90"])),
-          ["Defensive duels won, %"]: toNumber(getFirstExisting(row, ["Defensive duels won, %", "Def duels won %"])),
-          ["Aerial duels won, %"]: toNumber(getFirstExisting(row, ["Aerial duels won, %", "Aerial won %"])),
-          ["Interceptions per 90"]: toNumber(getFirstExisting(row, ["Interceptions per 90", "Interceptions/90"])),
-          ["PAdj Sliding tackles"]: toNumber(getFirstExisting(row, ["PAdj Sliding tackles"])),
-          ["Accurate passes, %"]: toNumber(getFirstExisting(row, ["Accurate passes, %", "Pass accuracy %"])),
-          ["Progressive passes per 90"]: toNumber(getFirstExisting(row, ["Progressive passes per 90", "Prog passes/90"])),
-          ["Passes to final third per 90"]: toNumber(getFirstExisting(row, ["Passes to final third per 90", "Passes to final 3rd per 90"])),
-          league_factor: toNumber(getFirstExisting(row, ["league_factor", "League Factor"])) || 1
-        };
+    const va = a[sortKey];
+    const vb = b[sortKey];
+    const na = toNumber(va);
+    const nb = toNumber(vb);
 
-        player.Position_main = normalizePosition(player.Position);
-        player.Rating = 0;
-        player.WeightedRating = 0;
-
-        return player;
-      }).filter(p => p.Player);
+    let result = 0;
+    if ((String(va).match(/\d/) || typeof va === "number") && (String(vb).match(/\d/) || typeof vb === "number")) {
+      result = na - nb;
+    } else {
+      result = String(va ?? "").localeCompare(String(vb ?? ""));
     }
 
-    // =========================
-    // RATINGS
-    // =========================
-    function calculateRatings(players) {
-      const groups = {};
-      for (const p of players) {
-        const pos = p.Position_main || "OTHER";
-        if (!groups[pos]) groups[pos] = [];
-        groups[pos].push(p);
-      }
+    return sortAsc ? result : -result;
+  });
+  return arr;
+}
 
-      for (const pos in groups) {
-        const model = POSITION_MODELS[pos];
-        const groupPlayers = groups[pos];
+function applyFilters() {
+  const position = document.getElementById("filterPosition").value.trim();
+  const team = document.getElementById("filterTeam").value.trim().toLowerCase();
+  const ageMax = toNumber(document.getElementById("filterAge").value);
+  const minMinutes = toNumber(document.getElementById("filterMinutes").value);
+  const minRating = toNumber(document.getElementById("filterRating").value);
 
-        if (!model) {
-          for (const p of groupPlayers) {
-            p.Rating = 5.5;
-            p.WeightedRating = +(p.Rating * (p.league_factor || 1)).toFixed(2);
-          }
-          continue;
-        }
+  filteredPlayers = allPlayers.filter(p => {
+    if (position && p.Position_main !== position) return false;
+    if (team && !String(p.Team || "").toLowerCase().includes(team)) return false;
+    if (ageMax && p.Age > ageMax) return false;
+    if (minMinutes && p["Minutes played"] < minMinutes) return false;
+    if (minRating && p.Rating < minRating) return false;
+    return true;
+  });
 
-        const metricArrays = {};
-        for (const metric of model.metrics) {
-          metricArrays[metric.key] = groupPlayers.map(p => toNumber(p[metric.key]));
-        }
+  renderTable(sortRows(filteredPlayers));
+  setStatus(`Filtros aplicados.\nJugadores visibles: ${filteredPlayers.length}`, "ok");
+}
 
-        for (const p of groupPlayers) {
-          let totalWeight = 0;
-          let weightedScore = 0;
+function clearFilters() {
+  document.getElementById("filterPosition").value = "";
+  document.getElementById("filterTeam").value = "";
+  document.getElementById("filterAge").value = "";
+  document.getElementById("filterMinutes").value = "";
+  document.getElementById("filterRating").value = "";
+  filteredPlayers = [...allPlayers];
+  renderTable(sortRows(filteredPlayers));
+  setStatus(`Filtros limpiados.\nJugadores visibles: ${filteredPlayers.length}`, "ok");
+}
 
-          for (const metric of model.metrics) {
-            const value = toNumber(p[metric.key]);
-            const percentile = percentileRank(metricArrays[metric.key], value);
-            const score = scoreToTen(percentile);
-            weightedScore += score * metric.weight;
-            totalWeight += metric.weight;
-          }
-
-          p.Rating = totalWeight ? +(weightedScore / totalWeight).toFixed(2) : 5.5;
-          p.WeightedRating = +(p.Rating * (p.league_factor || 1)).toFixed(2);
-        }
-      }
+function loadSelectedSheet() {
+  try {
+    if (!workbookGlobal) {
+      setStatus("No hay workbook cargado todavía.", "error");
+      return;
     }
 
-    // =========================
-    // FILTROS
-    // =========================
-    document.getElementById("applyFilters").addEventListener("click", applyFilters);
-    document.getElementById("clearFilters").addEventListener("click", clearFilters);
-
-    function applyFilters() {
-      const position = document.getElementById("filterPosition").value.trim();
-      const team = document.getElementById("filterTeam").value.trim().toLowerCase();
-      const ageMax = toNumber(document.getElementById("filterAge").value);
-      const minMinutes = toNumber(document.getElementById("filterMinutes").value);
-      const minRating = toNumber(document.getElementById("filterRating").value);
-
-      filteredPlayers = allPlayers.filter(p => {
-        if (position && p.Position_main !== position) return false;
-        if (team && !String(p.Team || "").toLowerCase().includes(team)) return false;
-        if (ageMax && p.Age > ageMax) return false;
-        if (minMinutes && p["Minutes played"] < minMinutes) return false;
-        if (minRating && p.WeightedRating < minRating) return false;
-        return true;
-      });
-
-      renderTable(sortPlayers(filteredPlayers));
-      setStatus(`Filtros aplicados. ${filteredPlayers.length} jugadores mostrados.`);
+    const sheetName = document.getElementById("sheetSelect").value;
+    if (!sheetName) {
+      setStatus("No hay hoja seleccionada.", "error");
+      return;
     }
 
-    function clearFilters() {
-      document.getElementById("filterPosition").value = "";
-      document.getElementById("filterTeam").value = "";
-      document.getElementById("filterAge").value = "";
-      document.getElementById("filterMinutes").value = "";
-      document.getElementById("filterRating").value = "";
-      filteredPlayers = [...allPlayers];
-      renderTable(sortPlayers(filteredPlayers));
-      setStatus(`Filtros limpiados. ${filteredPlayers.length} jugadores mostrados.`);
+    document.getElementById("currentSheet").value = sheetName;
+    const sheet = workbookGlobal.Sheets[sheetName];
+    if (!sheet) {
+      setStatus("No se encontró la hoja seleccionada.", "error");
+      return;
     }
 
-    // =========================
-    // ORDENACIÓN
-    // =========================
-    document.querySelectorAll("#playersTable thead th").forEach(th => {
-      th.addEventListener("click", () => {
-        const key = th.getAttribute("data-sort");
-        if (!key) return;
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-        if (sortKey === key) {
-          sortAsc = !sortAsc;
-        } else {
-          sortKey = key;
-          sortAsc = false;
-        }
-
-        renderTable(sortPlayers(filteredPlayers));
-      });
-    });
-
-    function sortPlayers(players) {
-      const arr = [...players];
-      arr.sort((a, b) => {
-        const va = a[sortKey];
-        const vb = b[sortKey];
-
-        const na = toNumber(va);
-        const nb = toNumber(vb);
-
-        const bothNumeric = !(isNaN(na) || isNaN(nb)) && (typeof va === "number" || typeof vb === "number" || /\d/.test(String(va)) || /\d/.test(String(vb)));
-
-        let result = 0;
-        if (bothNumeric) {
-          result = na - nb;
-        } else {
-          result = String(va ?? "").localeCompare(String(vb ?? ""));
-        }
-
-        return sortAsc ? result : -result;
-      });
-      return arr;
+    if (!rows.length) {
+      allPlayers = [];
+      filteredPlayers = [];
+      renderTable([]);
+      setStatus("La hoja existe, pero no tiene filas con datos.", "error");
+      return;
     }
 
-    // =========================
-    // TABLA
-    // =========================
-    function renderTable(players) {
-      const tbody = document.querySelector("#playersTable tbody");
-      tbody.innerHTML = "";
+    allPlayers = normalizeRows(rows);
+    calculateProRatings(allPlayers);
+    filteredPlayers = [...allPlayers];
+    renderTable(sortRows(filteredPlayers));
 
-      if (!players.length) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="16" style="text-align:center; padding:20px;">No hay datos para mostrar</td>
-          </tr>
-        `;
-        return;
-      }
+    const headers = Object.keys(rows[0] || {});
+    setStatus(
+      `Excel cargado correctamente.\nFilas detectadas: ${rows.length}\nJugadores válidos: ${allPlayers.length}\nModelo: percentiles por posición\nColumnas: ${headers.slice(0,10).join(", ")}`,
+      "ok"
+    );
+  } catch (err) {
+    console.error(err);
+    setStatus("Error al cargar la hoja:\n" + (err && err.stack ? err.stack : err), "error");
+  }
+}
 
-      for (const p of players) {
-        const tr = document.createElement("tr");
+document.getElementById("reloadSheet").addEventListener("click", loadSelectedSheet);
+document.getElementById("applyFilters").addEventListener("click", applyFilters);
+document.getElementById("clearFilters").addEventListener("click", clearFilters);
 
-        const weightedClass = p.WeightedRating >= 7.5 ? "good" : (p.WeightedRating <= 5.5 ? "bad" : "");
-        const ratingClass = p.Rating >= 7.5 ? "good" : (p.Rating <= 5.5 ? "bad" : "");
-
-        tr.innerHTML = `
-          <td>${escapeHtml(p.Player)}</td>
-          <td>${escapeHtml(p.Team)}</td>
-          <td><span class="pill">${escapeHtml(p.Position_main)}</span></td>
-          <td>${formatNum(p.Age)}</td>
-          <td>${formatNum(p["Minutes played"])}</td>
-          <td class="${ratingClass}">${formatNum(p.Rating)}</td>
-          <td class="${weightedClass}">${formatNum(p.WeightedRating)}</td>
-          <td>${formatNum(p["Goals per 90"])}</td>
-          <td>${formatNum(p["Assists per 90"])}</td>
-          <td>${formatNum(p["xG per 90"])}</td>
-          <td>${formatNum(p["xA per 90"])}</td>
-          <td>${formatNum(p["Dribbles per 90"])}</td>
-          <td>${formatNum(p["Progressive runs per 90"])}</td>
-          <td>${formatNum(p["Crosses per 90"])}</td>
-          <td>${formatNum(p["Defensive duels won, %"])}</td>
-          <td>${formatNum(p["Aerial duels won, %"])}</td>
-        `;
-
-        tbody.appendChild(tr);
-      }
+document.getElementById("excelFile").addEventListener("change", function(e) {
+  try {
+    const file = e.target.files && e.target.files[0];
+    if (!file) {
+      setStatus("No se seleccionó archivo.", "error");
+      return;
     }
 
-    // =========================
-    // SUPABASE: GUARDAR DATOS SIN ROMPER APP
-    // =========================
-    async function trySaveToSupabase(players) {
-      if (!supabaseClient) {
-        console.log("Supabase no configurado. Se omite guardado.");
-        return;
-      }
+    if (typeof XLSX === "undefined") {
+      setStatus("La librería XLSX no se ha cargado. Prueba con conexión a internet y Ctrl+F5.", "error");
+      return;
+    }
 
+    setStatus(`Archivo detectado: ${file.name}\nTamaño: ${file.size} bytes\nLeyendo...`);
+
+    const reader = new FileReader();
+
+    reader.onload = function(evt) {
       try {
-        const payload = players.map(p => ({
-          player: p.Player,
-          team: p.Team,
-          position: p.Position_main,
-          age: p.Age,
-          minutes_played: p["Minutes played"],
-          rating: p.Rating,
-          weighted_rating: p.WeightedRating
-        }));
+        const data = new Uint8Array(evt.target.result);
+        workbookGlobal = XLSX.read(data, { type: "array" });
 
-        const { error } = await supabaseClient
-          .from("players")
-          .upsert(payload, { onConflict: "player,team,position" });
-
-        if (error) {
-          console.error("Supabase upsert error:", error);
-          setStatus(`Excel cargado. Supabase no guardó, pero la app sigue funcionando.`);
+        if (!workbookGlobal || !workbookGlobal.SheetNames || !workbookGlobal.SheetNames.length) {
+          setStatus("El archivo se abrió, pero no se detectaron hojas.", "error");
           return;
         }
 
-        setStatus(`Excel cargado correctamente y datos guardados en Supabase.`);
-      } catch (err) {
-        console.error("Supabase error:", err);
-        setStatus(`Excel cargado correctamente. Supabase falló, pero la app sigue funcionando.`);
-      }
-    }
-
-    // =========================
-    // INICIO
-    // =========================
-    window.addEventListener("load", () => {
-      try {
-        initSupabaseFromStorage();
-        setStatus("Esperando Excel...");
+        fillSheetSelect(workbookGlobal);
+        loadSelectedSheet();
       } catch (err) {
         console.error(err);
-        setStatus("La app arrancó con errores menores. Prueba a cargar el Excel.");
+        setStatus("Error procesando el archivo:\n" + (err && err.stack ? err.stack : err), "error");
       }
-    });
-  </script>
+    };
+
+    reader.onerror = function(err) {
+      console.error(err);
+      setStatus("FileReader no pudo leer el archivo.", "error");
+    };
+
+    reader.readAsArrayBuffer(file);
+  } catch (err) {
+    console.error(err);
+    setStatus("Error general:\n" + (err && err.stack ? err.stack : err), "error");
+  }
+});
+
+document.querySelectorAll("#playersTable thead th").forEach(th => {
+  th.addEventListener("click", () => {
+    const key = th.getAttribute("data-sort");
+    if (!key) return;
+    if (sortKey === key) sortAsc = !sortAsc;
+    else {
+      sortKey = key;
+      sortAsc = false;
+    }
+    renderTable(sortRows(filteredPlayers));
+  });
+});
+
+window.addEventListener("load", function() {
+  if (typeof XLSX === "undefined") {
+    setStatus("La página abrió, pero XLSX no cargó. Recarga con Ctrl+F5.", "error");
+  } else {
+    setStatus("Página lista. Selecciona un Excel.");
+  }
+});
+</script>
 </body>
 </html>
