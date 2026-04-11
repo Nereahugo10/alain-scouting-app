@@ -606,7 +606,29 @@
         select.appendChild(opt);
       });
     }
+    function populateTeamFilter(players) {
+  const select = document.getElementById("filterTeam");
+  if (!select) return;
 
+  const currentValue = select.value || "";
+  const teams = [...new Set(
+    players
+      .map(p => String(p.Team || "").trim())
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
+
+  select.innerHTML = `<option value="">Todos</option>`;
+  teams.forEach(team => {
+    const opt = document.createElement("option");
+    opt.value = team;
+    opt.textContent = team;
+    select.appendChild(opt);
+  });
+
+  if (teams.includes(currentValue)) {
+    select.value = currentValue;
+  }
+}
     function normalizeRows(rows) {
       return rows.map((row, idx) => {
         const item = {
@@ -837,7 +859,7 @@
 
     function applyFilters() {
       const position = document.getElementById("filterPosition").value.trim();
-      const team = document.getElementById("filterTeam").value.trim().toLowerCase();
+      const team = document.getElementById("filterTeam").value.trim();
       const player = document.getElementById("filterPlayer").value.trim().toLowerCase();
       const ageMax = toNumber(document.getElementById("filterAge").value);
       const minMinutes = toNumber(document.getElementById("filterMinutes").value);
@@ -846,7 +868,7 @@
 
       filteredPlayers = allPlayers.filter(p => {
         if (position && p.Position_main !== position) return false;
-        if (team && !String(p.Team || "").toLowerCase().includes(team)) return false;
+        if (team && String(p.Team || "").trim() !== team) return false;
         if (player && !String(p.Player || "").toLowerCase().includes(player)) return false;
         if (ageMax && p.Age > ageMax) return false;
         if (minMinutes && p["Minutes played"] < minMinutes) return false;
@@ -912,6 +934,7 @@
 
         allPlayers = normalizeRows(rows);
         calculateProRatings(allPlayers);
+        populateTeamFilter(allPlayers);
         filteredPlayers = getSortedVisible([...allPlayers]);
         renderTable(sortRows(filteredPlayers));
 
