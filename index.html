@@ -229,21 +229,53 @@
     }
 
     function detectMainPosition(rawPosition) {
-      const pos = normalizeText(rawPosition).toUpperCase();
-      if (!pos) return "UNKNOWN";
+  const pos = normalizeText(rawPosition).toUpperCase();
+  if (!pos) return "UNKNOWN";
 
-      if (pos.indexOf("RB") !== -1) return "RB";
-      if (pos.indexOf("LB") !== -1) return "LB";
-      if (pos.indexOf("RCB") !== -1 || pos.indexOf("LCB") !== -1 || pos.indexOf("CB") !== -1) return "CB";
-      if (pos.indexOf("DMF") !== -1 || pos.indexOf("CDM") !== -1 || pos === "DM") return "DMF";
-      if (pos.indexOf("CMF") !== -1 || pos.indexOf("MC") !== -1 || pos === "CM") return "MC";
-      if (pos.indexOf("AMF") !== -1 || pos.indexOf("CAM") !== -1 || pos === "AM") return "AMF";
-      if (pos.indexOf("RW") !== -1) return "RW";
-      if (pos.indexOf("LW") !== -1) return "LW";
-      if (pos.indexOf("CF") !== -1 || pos.indexOf("ST") !== -1 || pos.indexOf("FW") !== -1 || pos.indexOf("SS") !== -1) return "CF";
+  if (
+    pos.includes("RB") || pos.includes("RIGHT BACK")
+  ) return "RB";
 
-      return "UNKNOWN";
-    }
+  if (
+    pos.includes("LB") || pos.includes("LEFT BACK")
+  ) return "LB";
+
+  if (
+    pos.includes("RCB") || pos.includes("LCB") || pos.includes("CB") ||
+    pos.includes("CENTRE BACK") || pos.includes("CENTER BACK")
+  ) return "CB";
+
+  if (
+    pos.includes("DMF") || pos.includes("CDM") || pos === "DM" ||
+    pos.includes("DEFENSIVE MIDFIELDER")
+  ) return "DMF";
+
+  if (
+    pos.includes("CMF") || pos.includes("MC") || pos === "CM" ||
+    pos.includes("CENTRAL MIDFIELDER")
+  ) return "MC";
+
+  if (
+    pos.includes("AMF") || pos.includes("CAM") || pos === "AM" ||
+    pos.includes("ATTACKING MIDFIELDER")
+  ) return "AMF";
+
+  if (
+    pos.includes("RW") || pos.includes("RWF") || pos.includes("RIGHT WINGER") || pos === "RM"
+  ) return "RW";
+
+  if (
+    pos.includes("LW") || pos.includes("LWF") || pos.includes("LEFT WINGER") || pos === "LM"
+  ) return "LW";
+
+  if (
+    pos.includes("CF") || pos.includes("ST") || pos.includes("FW") ||
+    pos.includes("SS") || pos.includes("STRIKER") ||
+    pos.includes("CENTRE FORWARD") || pos.includes("CENTER FORWARD")
+  ) return "CF";
+
+  return "UNKNOWN";
+}
 
     function scoreFromRawMetric(value, min, max, inverse) {
       if (!isFinite(value)) return 4.5;
@@ -387,95 +419,117 @@
     }
 
     function buildPlayerObject(row) {
-      const rawPosition = getValue(row, ["Position", "Positions", "Posición"], "");
-      const mainPosition = detectMainPosition(rawPosition);
+  const rawPosition = getValue(row, ["Position", "Positions", "Posición", "Role"], "");
+  const mainPosition = detectMainPosition(rawPosition);
 
-      const p = {
-        player: normalizeText(getValue(row, ["Player", "Player name", "Name", "Jugador"], "")),
-        team: normalizeText(getValue(row, ["Team", "Club", "Equipo"], "")),
-        age: toNumber(getValue(row, ["Age", "Edad"], 0)),
-        minutes: toNumber(getValue(row, ["Minutes played", "Minutes", "Minutos", "Playing time"], 0)),
-        foot: normalizeText(getValue(row, ["Foot", "Preferred foot", "Pie"], "")),
-        raw_position: rawPosition,
-        main_position: mainPosition,
-        goals: toNumber(getValue(row, ["Goals", "Goles", "Goals per 90"], 0)),
-        assists: toNumber(getValue(row, ["Assists", "Asistencias", "Assists per 90"], 0)),
-        xg: toNumber(getValue(row, ["xG", "Expected goals", "xG per 90"], 0)),
-        xa: toNumber(getValue(row, ["xA", "Expected assists", "xA per 90"], 0)),
-        shots: toNumber(getValue(row, ["Shots", "Shots per 90", "Remates", "Shots total"], 0)),
-        progressive_runs: toNumber(getValue(row, ["Progressive runs per 90", "Progressive runs", "Carries progressive per 90", "Progressive carries per 90"], 0)),
-        dribbles: toNumber(getValue(row, ["Dribbles per 90", "Dribbles", "Successful dribbles per 90"], 0)),
-        crosses: toNumber(getValue(row, ["Crosses per 90", "Crosses", "Accurate crosses per 90"], 0)),
-        defensive_duels_won: toNumber(getValue(row, ["Defensive duels won, %", "Defensive duels won %"], 0)),
-        aerial_duels_won: toNumber(getValue(row, ["Aerial duels won, %", "Aerial duels won %"], 0)),
-        interceptions: toNumber(getValue(row, ["Interceptions per 90", "Interceptions"], 0)),
-        passes_final_third: toNumber(getValue(row, ["Passes to final third per 90", "Passes final third per 90", "Passes to final third"], 0)),
-        passes_acc: toNumber(getValue(row, ["Accurate passes, %", "Pass accuracy, %"], 0)),
-        progressive_passes: toNumber(getValue(row, ["Progressive passes per 90", "Progressive passes"], 0)),
-        through_passes: toNumber(getValue(row, ["Through passes per 90", "Through passes"], 0)),
-        through_passes_acc: toNumber(getValue(row, ["Accurate through passes, %", "Through passes accuracy, %"], 0)),
-        key_passes: toNumber(getValue(row, ["Key passes per 90", "Key passes"], 0)),
-        touches_box: toNumber(getValue(row, ["Touches in box per 90", "Touches in penalty area per 90"], 0)),
-        non_penalty_goals: toNumber(getValue(row, ["Non-penalty goals", "Non-penalty goals per 90"], 0)),
-        top_speed: toNumber(getValue(row, ["Top speed", "Maximum speed", "Sprint speed"], 0)),
-        recoveries: toNumber(getValue(row, ["Recoveries per 90", "Ball recoveries per 90"], 0)),
-        long_passes_acc: toNumber(getValue(row, ["Accurate long passes, %", "Long passes accuracy, %"], 0)),
-        forward_passes_acc: toNumber(getValue(row, ["Accurate forward passes, %", "Forward passes accuracy, %"], 0)),
-        p_adj_tackles: toNumber(getValue(row, ["PAdj Sliding tackles", "PAdj tackles", "PAdj sliding tackles"], 0)),
-        p_adj_interceptions: toNumber(getValue(row, ["PAdj Interceptions", "PAdj interceptions"], 0)),
-        league_factor: toNumber(getValue(row, ["league_factor", "League Factor", "Factor Liga"], 1)) || 1,
-        adaptation_score: toNumber(getValue(row, ["adaptation_score_final", "adaptation_score", "Adaptation Score", "Adaptation"], 50)) || 50
-      };
+  const p = {
+    player: normalizeText(getValue(row, ["Player", "Player name", "Name", "Jugador"], "")),
+    team: normalizeText(getValue(row, ["Team", "Club", "Equipo"], "")),
+    age: toNumber(getValue(row, ["Age", "Edad"], 0)),
+    minutes: toNumber(getValue(row, ["Minutes played", "Minutes", "Minutos", "Playing time"], 0)),
+    foot: normalizeText(getValue(row, ["Foot", "Preferred foot", "Pie"], "")),
+    raw_position: rawPosition,
+    main_position: mainPosition,
 
-      p.rating = getPlayerRating(p);
-      p.weighted_rating = getWeightedRating(p);
-      p.external_id = (p.player + "__" + p.team + "__" + p.main_position).toLowerCase();
+    goals: toNumber(getValue(row, ["Goals", "Goles", "Goals per 90"], 0)),
+    assists: toNumber(getValue(row, ["Assists", "Asistencias", "Assists per 90"], 0)),
+    xg: toNumber(getValue(row, ["xG", "Expected goals", "xG per 90"], 0)),
+    xa: toNumber(getValue(row, ["xA", "Expected assists", "xA per 90"], 0)),
+    shots: toNumber(getValue(row, ["Shots", "Shots per 90", "Remates", "Shots total"], 0)),
+    progressive_runs: toNumber(getValue(row, ["Progressive runs per 90", "Progressive runs", "Carries progressive per 90", "Progressive carries per 90"], 0)),
+    dribbles: toNumber(getValue(row, ["Dribbles per 90", "Dribbles", "Successful dribbles per 90"], 0)),
+    crosses: toNumber(getValue(row, ["Crosses per 90", "Crosses", "Accurate crosses per 90"], 0)),
+    defensive_duels_won: toNumber(getValue(row, ["Defensive duels won, %", "Defensive duels won %"], 0)),
+    aerial_duels_won: toNumber(getValue(row, ["Aerial duels won, %", "Aerial duels won %"], 0)),
+    interceptions: toNumber(getValue(row, ["Interceptions per 90", "Interceptions"], 0)),
+    passes_final_third: toNumber(getValue(row, ["Passes to final third per 90", "Passes final third per 90", "Passes to final third"], 0)),
+    passes_acc: toNumber(getValue(row, ["Accurate passes, %", "Pass accuracy, %"], 0)),
+    progressive_passes: toNumber(getValue(row, ["Progressive passes per 90", "Progressive passes"], 0)),
+    through_passes: toNumber(getValue(row, ["Through passes per 90", "Through passes"], 0)),
+    through_passes_acc: toNumber(getValue(row, ["Accurate through passes, %", "Through passes accuracy, %"], 0)),
+    key_passes: toNumber(getValue(row, ["Key passes per 90", "Key passes"], 0)),
+    touches_box: toNumber(getValue(row, ["Touches in box per 90", "Touches in penalty area per 90"], 0)),
+    non_penalty_goals: toNumber(getValue(row, ["Non-penalty goals", "Non-penalty goals per 90"], 0)),
+    top_speed: toNumber(getValue(row, ["Top speed", "Maximum speed", "Sprint speed"], 0)),
+    recoveries: toNumber(getValue(row, ["Recoveries per 90", "Ball recoveries per 90"], 0)),
+    long_passes_acc: toNumber(getValue(row, ["Accurate long passes, %", "Long passes accuracy, %"], 0)),
+    forward_passes_acc: toNumber(getValue(row, ["Accurate forward passes, %", "Forward passes accuracy, %"], 0)),
+    p_adj_tackles: toNumber(getValue(row, ["PAdj Sliding tackles", "PAdj tackles", "PAdj sliding tackles"], 0)),
+    p_adj_interceptions: toNumber(getValue(row, ["PAdj Interceptions", "PAdj interceptions"], 0)),
+    league_factor: toNumber(getValue(row, ["league_factor", "League Factor", "Factor Liga"], 1)) || 1,
+    adaptation_score: toNumber(getValue(row, ["adaptation_score_final", "adaptation_score", "Adaptation Score", "Adaptation"], 50)) || 50
+  };
 
-      return p;
+  if (!p.player) return null;
+
+  if (p.main_position === "UNKNOWN") {
+    if (p.raw_position) {
+      console.log("Posición no reconocida:", p.raw_position, "Jugador:", p.player);
     }
+  }
+
+  p.rating = getPlayerRating(p);
+  p.weighted_rating = getWeightedRating(p);
+  p.external_id = (p.player + "__" + p.team + "__" + p.main_position).toLowerCase();
+
+  return p;
+}
 
     async function loadExcels() {
-      const input = document.getElementById("excelFiles");
-      const files = input.files;
+  const input = document.getElementById("excelFiles");
+  const files = input.files;
 
-      if (!files || files.length === 0) {
-        alert("Selecciona al menos un Excel.");
-        return;
-      }
+  if (!files || files.length === 0) {
+    alert("Selecciona al menos un Excel.");
+    return;
+  }
 
-      setStatus("Cargando Excel...");
-      allPlayers = [];
+  setStatus("Cargando Excel...");
+  allPlayers = [];
 
-      try {
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const data = await file.arrayBuffer();
-          const workbook = XLSX.read(data, { type: "array" });
+  try {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: "array" });
 
-          for (let s = 0; s < workbook.SheetNames.length; s++) {
-            const sheetName = workbook.SheetNames[s];
-            const worksheet = workbook.Sheets[sheetName];
-            const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+      console.log("Archivo:", file.name);
+      console.log("Hojas:", workbook.SheetNames);
 
-            for (let r = 0; r < rows.length; r++) {
-              const p = buildPlayerObject(rows[r]);
-              if (p.player && p.main_position !== "UNKNOWN") {
-                allPlayers.push(p);
-              }
-            }
+      for (let s = 0; s < workbook.SheetNames.length; s++) {
+        const sheetName = workbook.SheetNames[s];
+        const worksheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+        console.log("Hoja:", sheetName, "Filas:", rows.length);
+
+        for (let r = 0; r < rows.length; r++) {
+          const p = buildPlayerObject(rows[r]);
+          if (p && p.player) {
+            allPlayers.push(p);
           }
         }
-
-        allPlayers = deduplicatePlayers(allPlayers);
-        currentPlayers = allPlayers.slice();
-        populateFilters(allPlayers);
-        applyFilters();
-        setStatus("Excel cargado: " + allPlayers.length + " jugadores.");
-      } catch (e) {
-        console.error(e);
-        setStatus("Error al cargar Excel.");
       }
     }
+
+    if (!allPlayers.length) {
+      setStatus("Se leyó el Excel pero no se detectó ningún jugador.");
+      alert("El Excel se ha leído, pero no he detectado jugadores. Abre F12 > Console y mira qué nombre tienen tus columnas.");
+      return;
+    }
+
+    allPlayers = deduplicatePlayers(allPlayers);
+    currentPlayers = allPlayers.slice();
+    populateFilters(allPlayers);
+    applyFilters();
+
+    setStatus("Excel cargado: " + allPlayers.length + " jugadores.");
+  } catch (e) {
+    console.error(e);
+    setStatus("Error al cargar Excel.");
+    alert("Error al cargar Excel. Mira F12 > Console.");
+  }
+}
 
     async function saveToSupabase() {
       if (!allPlayers.length) {
