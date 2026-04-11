@@ -1,780 +1,278 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Scouting App</title>
 
+  <!-- XLSX para leer Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <!-- Supabase opcional -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+      background: #f5f7fb;
       color: #222;
     }
-    .box {
-      background: white;
-      padding: 16px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      margin-bottom: 16px;
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
     }
     h1 {
-      margin-top: 0;
+      margin: 0 0 16px 0;
+      font-size: 28px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
     }
     .row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: end;
     }
-    input, select, button {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 160px;
+      flex: 1;
+    }
+    .field label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #555;
+    }
+    .field input,
+    .field select,
+    .field button {
+      padding: 10px 12px;
+      border: 1px solid #d9dfeb;
+      border-radius: 10px;
       font-size: 14px;
-      width: 100%;
-      box-sizing: border-box;
+      background: #fff;
     }
-    button {
-      border: none;
-      background: #5b2c83;
-      color: white;
-      font-weight: bold;
+    .field button {
       cursor: pointer;
+      font-weight: 700;
     }
-    button:hover {
-      opacity: 0.92;
+    .btn-primary {
+      background: #5a2ca0;
+      color: white;
+      border: none;
     }
-    .green {
-      background: #198754;
+    .btn-secondary {
+      background: #eef2ff;
+      color: #2d3a66;
+      border: none;
     }
-    .blue {
-      background: #0d6efd;
+    .status {
+      font-size: 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+      background: #f3f6fb;
+      color: #333;
+      word-break: break-word;
     }
-    .grey {
-      background: #6c757d;
-    }
-    #status {
-      margin-top: 12px;
-      font-weight: bold;
-      color: #5b2c83;
+    .small {
+      font-size: 12px;
+      color: #666;
     }
     .table-wrap {
-      overflow-x: auto;
+      overflow: auto;
+      max-height: 70vh;
+      border: 1px solid #e6ebf5;
+      border-radius: 12px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1000px;
-      background: white;
+      background: #fff;
+      min-width: 1200px;
     }
-    th, td {
-      border-bottom: 1px solid #e6e6e6;
-      padding: 8px 10px;
-      font-size: 13px;
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f1f4fa;
+      z-index: 1;
+      cursor: pointer;
       text-align: left;
+      font-size: 13px;
+      padding: 10px;
+      border-bottom: 1px solid #dbe3f0;
       white-space: nowrap;
     }
-    th {
-      background: #f0f2f5;
+    tbody td {
+      padding: 10px;
+      border-bottom: 1px solid #eef2f7;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    tbody tr:hover {
+      background: #fafcff;
     }
     .good {
-      background: #d4edda;
-      color: #155724;
-      font-weight: bold;
-      border-radius: 4px;
-      padding: 2px 6px;
-      display: inline-block;
-    }
-    .mid {
-      background: #eef1f4;
-      color: #333;
-      font-weight: bold;
-      border-radius: 4px;
-      padding: 2px 6px;
-      display: inline-block;
+      color: #17803d;
+      font-weight: 700;
     }
     .bad {
-      background: #f8d7da;
-      color: #721c24;
-      font-weight: bold;
-      border-radius: 4px;
-      padding: 2px 6px;
+      color: #b42318;
+      font-weight: 700;
+    }
+    .pill {
       display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #eef2ff;
+      color: #3b3f8c;
     }
   </style>
 </head>
 <body>
-
-  <div class="box">
+  <div class="container">
     <h1>Scouting App</h1>
 
-    <input type="file" id="excelFiles" accept=".xlsx,.xls" multiple>
+    <div class="card">
+      <div class="row">
+        <div class="field" style="min-width:280px;">
+          <label>Cargar Excel</label>
+          <input type="file" id="excelFile" accept=".xlsx,.xls" />
+        </div>
 
-    <div class="row">
-      <button onclick="loadExcels()">Cargar Excel(s)</button>
-      <button class="green" onclick="saveToSupabase()">Guardar en Supabase</button>
-      <button class="blue" onclick="loadFromSupabase()">Cargar desde Supabase</button>
-      <button class="grey" onclick="clearFilters()">Limpiar filtros</button>
+        <div class="field">
+          <label>Posición</label>
+          <select id="filterPosition">
+            <option value="">Todas</option>
+            <option value="RB">RB</option>
+            <option value="LB">LB</option>
+            <option value="CB">CB</option>
+            <option value="DMF">DMF</option>
+            <option value="MC">MC</option>
+            <option value="AMF">AMF</option>
+            <option value="RW">RW</option>
+            <option value="LW">LW</option>
+            <option value="CF">CF</option>
+            <option value="ST">ST</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Equipo</label>
+          <input type="text" id="filterTeam" placeholder="Filtrar por equipo" />
+        </div>
+
+        <div class="field">
+          <label>Edad máxima</label>
+          <input type="number" id="filterAge" placeholder="Ej: 24" />
+        </div>
+
+        <div class="field">
+          <label>Minutos mínimos</label>
+          <input type="number" id="filterMinutes" placeholder="Ej: 700" />
+        </div>
+
+        <div class="field">
+          <label>Rating mínimo</label>
+          <input type="number" step="0.1" id="filterRating" placeholder="Ej: 7.5" />
+        </div>
+
+        <div class="field" style="max-width:180px;">
+          <button class="btn-primary" id="applyFilters">Aplicar filtros</button>
+        </div>
+
+        <div class="field" style="max-width:160px;">
+          <button class="btn-secondary" id="clearFilters">Limpiar</button>
+        </div>
+      </div>
+
+      <div class="status" id="status">
+        Esperando Excel...
+      </div>
+      <div class="small" style="margin-top:8px;">
+        Supabase es opcional. Si falla, la app sigue funcionando igual con Excel local.
+      </div>
     </div>
 
-    <div class="row">
-      <select id="filterTeam" onchange="applyFilters()">
-        <option value="">Equipo</option>
-      </select>
-
-      <select id="filterPosition" onchange="applyFilters()">
-        <option value="">Posición</option>
-      </select>
-
-      <input type="number" id="filterMinAge" placeholder="Edad mín." oninput="applyFilters()">
-      <input type="number" id="filterMaxAge" placeholder="Edad máx." oninput="applyFilters()">
-      <input type="number" id="filterMinMinutes" placeholder="Minutos mín." oninput="applyFilters()">
-      <input type="number" id="filterMinRating" placeholder="Rating mín." step="0.1" oninput="applyFilters()">
-      <input type="number" id="filterMinWeighted" placeholder="Weighted mín." step="0.1" oninput="applyFilters()">
-
-      <select id="sortBy" onchange="applyFilters()">
-        <option value="weighted_rating">Ordenar por Weighted</option>
-        <option value="rating">Ordenar por Rating</option>
-        <option value="minutes">Ordenar por Minutos</option>
-        <option value="age_asc">Edad ascendente</option>
-        <option value="age_desc">Edad descendente</option>
-        <option value="player">Nombre</option>
-      </select>
+    <div class="card">
+      <div class="row">
+        <div class="field">
+          <label>Supabase URL</label>
+          <input type="text" id="supabaseUrl" placeholder="https://xxxx.supabase.co" />
+        </div>
+        <div class="field">
+          <label>Supabase anon key</label>
+          <input type="text" id="supabaseKey" placeholder="Pega aquí tu anon key" />
+        </div>
+        <div class="field" style="max-width:180px;">
+          <button class="btn-secondary" id="saveSupabaseConfig">Guardar config</button>
+        </div>
+      </div>
+      <div class="small" style="margin-top:8px;">
+        Se guarda en el navegador. No rompe la carga del Excel aunque no pongas nada.
+      </div>
     </div>
 
-    <div id="status">Sin archivos cargados.</div>
-    <div id="summary"></div>
-  </div>
-
-  <div class="box table-wrap">
-    <table id="playersTable">
-      <thead>
-        <tr>
-          <th>Player</th>
-          <th>Team</th>
-          <th>Age</th>
-          <th>Minutes</th>
-          <th>Position</th>
-          <th>Rating</th>
-          <th>Weighted</th>
-          <th>Goals</th>
-          <th>Assists</th>
-          <th>xG</th>
-          <th>xA</th>
-          <th>Shots</th>
-          <th>Prog Runs</th>
-          <th>Dribbles</th>
-          <th>Crosses</th>
-          <th>Def Duels Won %</th>
-          <th>Aerial Won %</th>
-          <th>Passes Final 3rd</th>
-          <th>Interceptions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="card">
+      <div class="table-wrap">
+        <table id="playersTable">
+          <thead>
+            <tr>
+              <th data-sort="Player">Jugador</th>
+              <th data-sort="Team">Equipo</th>
+              <th data-sort="Position_main">Posición</th>
+              <th data-sort="Age">Edad</th>
+              <th data-sort="Minutes played">Min</th>
+              <th data-sort="Rating">Rating</th>
+              <th data-sort="WeightedRating">Weighted</th>
+              <th data-sort="Goals per 90">Goals/90</th>
+              <th data-sort="Assists per 90">Assists/90</th>
+              <th data-sort="xG per 90">xG/90</th>
+              <th data-sort="xA per 90">xA/90</th>
+              <th data-sort="Dribbles per 90">Dribbles/90</th>
+              <th data-sort="Progressive runs per 90">Prog Runs/90</th>
+              <th data-sort="Crosses per 90">Crosses/90</th>
+              <th data-sort="Defensive duels won, %">Def Duels Won %</th>
+              <th data-sort="Aerial duels won, %">Aerial Won %</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <script>
+    // =========================
+    // VARIABLES GLOBALES
+    // =========================
     let allPlayers = [];
-    let currentPlayers = [];
-    let supabase = null;
-
-    const SUPABASE_URL = "sb_publishable_ktvDFCCVsG0PiQDTIGODKQ_EGvhXUMz";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1emNoeHJrcmx1b3N3bmptcndyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MzAzMjUsImV4cCI6MjA5MTMwNjMyNX0.4yhjR3dYWu6-sfRhO4CYfIOGXMj-JmxsgA1ALgann7M";
-    const SUPABASE_TABLE = "players_app";
-
-    function setStatus(text) {
-      document.getElementById("status").textContent = text;
-    }
-
-    function initSupabase() {
-      if (!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL.indexOf("PON_AQUI") !== -1) {
-        setStatus("Pon tu SUPABASE_URL y SUPABASE_KEY.");
-        return false;
-      }
-      try {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        return true;
-      } catch (e) {
-        console.error(e);
-        setStatus("Error iniciando Supabase.");
-        return false;
-      }
-    }
-
-    function toNumber(value) {
-      if (value === null || value === undefined || value === "") return 0;
-      if (typeof value === "number") return isNaN(value) ? 0 : value;
-      const cleaned = String(value).replace(/%/g, "").replace(/,/g, ".").replace(/[^\d.-]/g, "");
-      const num = parseFloat(cleaned);
-      return isNaN(num) ? 0 : num;
-    }
-
-    function getValue(row, keys, defaultValue) {
-      for (let i = 0; i < keys.length; i++) {
-        const k = keys[i];
-        if (row[k] !== undefined && row[k] !== null && row[k] !== "") return row[k];
-      }
-      return defaultValue;
-    }
-
-    function normalizeText(v) {
-      return String(v || "").trim();
-    }
-
-    function detectMainPosition(rawPosition) {
-  const pos = normalizeText(rawPosition).toUpperCase();
-  if (!pos) return "UNKNOWN";
-
-  if (
-    pos.includes("RB") || pos.includes("RIGHT BACK")
-  ) return "RB";
-
-  if (
-    pos.includes("LB") || pos.includes("LEFT BACK")
-  ) return "LB";
-
-  if (
-    pos.includes("RCB") || pos.includes("LCB") || pos.includes("CB") ||
-    pos.includes("CENTRE BACK") || pos.includes("CENTER BACK")
-  ) return "CB";
-
-  if (
-    pos.includes("DMF") || pos.includes("CDM") || pos === "DM" ||
-    pos.includes("DEFENSIVE MIDFIELDER")
-  ) return "DMF";
-
-  if (
-    pos.includes("CMF") || pos.includes("MC") || pos === "CM" ||
-    pos.includes("CENTRAL MIDFIELDER")
-  ) return "MC";
-
-  if (
-    pos.includes("AMF") || pos.includes("CAM") || pos === "AM" ||
-    pos.includes("ATTACKING MIDFIELDER")
-  ) return "AMF";
-
-  if (
-    pos.includes("RW") || pos.includes("RWF") || pos.includes("RIGHT WINGER") || pos === "RM"
-  ) return "RW";
-
-  if (
-    pos.includes("LW") || pos.includes("LWF") || pos.includes("LEFT WINGER") || pos === "LM"
-  ) return "LW";
-
-  if (
-    pos.includes("CF") || pos.includes("ST") || pos.includes("FW") ||
-    pos.includes("SS") || pos.includes("STRIKER") ||
-    pos.includes("CENTRE FORWARD") || pos.includes("CENTER FORWARD")
-  ) return "CF";
-
-  return "UNKNOWN";
-}
-
-    function scoreFromRawMetric(value, min, max, inverse) {
-      if (!isFinite(value)) return 4.5;
-      let n = (value - min) / (max - min);
-      n = Math.max(0, Math.min(1, n));
-      if (inverse) n = 1 - n;
-      return 4.5 + n * 3.5;
-    }
-
-    function scorePercent(value, min, max) {
-      return scoreFromRawMetric(value, min, max, false);
-    }
-
-    function clampRating(v) {
-      if (!isFinite(v)) return 4.5;
-      return Math.max(4.5, Math.min(9.2, v));
-    }
-
-    function weightedAverage(pairs) {
-      let total = 0;
-      let weights = 0;
-      for (let i = 0; i < pairs.length; i++) {
-        const value = pairs[i][0];
-        const weight = pairs[i][1];
-        if (value > 0 && weight > 0) {
-          total += value * weight;
-          weights += weight;
-        }
-      }
-      if (weights === 0) return 0;
-      return total / weights;
-    }
-
-    function getPlayerRating(p) {
-      const pos = p.main_position;
-
-      if (pos === "RB" || pos === "LB") {
-        return Number(clampRating(weightedAverage([
-          [scorePercent(p.defensive_duels_won, 45, 75), 0.22],
-          [scoreFromRawMetric(p.progressive_runs, 0.5, 5.5, false), 0.18],
-          [scoreFromRawMetric(p.dribbles, 0.2, 4.2, false), 0.12],
-          [scoreFromRawMetric(p.crosses, 0.2, 4.8, false), 0.14],
-          [scoreFromRawMetric(p.passes_final_third, 0.5, 8, false), 0.10],
-          [scoreFromRawMetric(p.interceptions, 0.5, 6.5, false), 0.10],
-          [scorePercent(p.passes_acc, 72, 92), 0.07],
-          [scorePercent(p.aerial_duels_won, 35, 70), 0.07]
-        ])).toFixed(2));
-      }
-
-      if (pos === "CB") {
-        return Number(clampRating(weightedAverage([
-          [scorePercent(p.defensive_duels_won, 48, 75), 0.28],
-          [scorePercent(p.aerial_duels_won, 48, 80), 0.22],
-          [scoreFromRawMetric(p.interceptions, 1, 8, false), 0.16],
-          [scoreFromRawMetric(p.p_adj_interceptions, 1, 10, false), 0.10],
-          [scoreFromRawMetric(p.p_adj_tackles, 0.5, 6.5, false), 0.10],
-          [scorePercent(p.passes_acc, 72, 95), 0.08],
-          [scoreFromRawMetric(p.progressive_passes, 1, 9, false), 0.06]
-        ])).toFixed(2));
-      }
-
-      if (pos === "DMF") {
-        return Number(clampRating(weightedAverage([
-          [scorePercent(p.defensive_duels_won, 48, 75), 0.20],
-          [scoreFromRawMetric(p.interceptions, 1, 8.5, false), 0.18],
-          [scoreFromRawMetric(p.recoveries, 2, 13, false), 0.12],
-          [scorePercent(p.passes_acc, 78, 95), 0.12],
-          [scoreFromRawMetric(p.progressive_passes, 1, 9, false), 0.12],
-          [scoreFromRawMetric(p.passes_final_third, 0.5, 8.5, false), 0.10],
-          [scorePercent(p.forward_passes_acc, 62, 90), 0.08],
-          [scorePercent(p.long_passes_acc, 38, 75), 0.08]
-        ])).toFixed(2));
-      }
-
-      if (pos === "MC") {
-        return Number(clampRating(weightedAverage([
-          [scoreFromRawMetric(p.progressive_passes, 1, 9, false), 0.16],
-          [scoreFromRawMetric(p.passes_final_third, 1, 9, false), 0.16],
-          [scoreFromRawMetric(p.key_passes, 0.1, 3, false), 0.12],
-          [scoreFromRawMetric(p.through_passes, 0.05, 1.8, false), 0.10],
-          [scorePercent(p.through_passes_acc, 20, 68), 0.08],
-          [scorePercent(p.passes_acc, 74, 94), 0.10],
-          [scoreFromRawMetric(p.interceptions, 0.5, 6.5, false), 0.10],
-          [scorePercent(p.defensive_duels_won, 42, 70), 0.08],
-          [scoreFromRawMetric(p.progressive_runs, 0.3, 3.2, false), 0.10]
-        ])).toFixed(2));
-      }
-
-      if (pos === "AMF") {
-        return Number(clampRating(weightedAverage([
-          [scoreFromRawMetric(p.key_passes, 0.1, 3.2, false), 0.18],
-          [scoreFromRawMetric(p.through_passes, 0.05, 1.8, false), 0.14],
-          [scorePercent(p.through_passes_acc, 20, 68), 0.08],
-          [scoreFromRawMetric(p.xa, 0.02, 0.32, false), 0.14],
-          [scoreFromRawMetric(p.xg, 0.03, 0.35, false), 0.12],
-          [scoreFromRawMetric(p.dribbles, 0.2, 4.5, false), 0.12],
-          [scoreFromRawMetric(p.progressive_runs, 0.3, 4, false), 0.10],
-          [scoreFromRawMetric(p.shots, 0.5, 4.2, false), 0.06],
-          [scoreFromRawMetric(p.assists, 0.01, 0.30, false), 0.06]
-        ])).toFixed(2));
-      }
-
-      if (pos === "RW" || pos === "LW") {
-        return Number(clampRating(weightedAverage([
-          [scoreFromRawMetric(p.dribbles, 0.3, 5.5, false), 0.18],
-          [scoreFromRawMetric(p.progressive_runs, 0.5, 6, false), 0.16],
-          [scoreFromRawMetric(p.touches_box, 0.3, 5.5, false), 0.12],
-          [scoreFromRawMetric(p.xa, 0.02, 0.28, false), 0.10],
-          [scoreFromRawMetric(p.xg, 0.03, 0.32, false), 0.10],
-          [scoreFromRawMetric(p.crosses, 0.2, 5, false), 0.08],
-          [scoreFromRawMetric(p.key_passes, 0.1, 3, false), 0.08],
-          [scoreFromRawMetric(p.shots, 0.5, 4.2, false), 0.08],
-          [scoreFromRawMetric(p.assists, 0.01, 0.30, false), 0.10]
-        ])).toFixed(2));
-      }
-
-      if (pos === "CF") {
-        return Number(clampRating(weightedAverage([
-          [scoreFromRawMetric((p.non_penalty_goals || p.goals), 0.05, 0.65, false), 0.30],
-          [scoreFromRawMetric(p.xg, 0.05, 0.65, false), 0.20],
-          [scoreFromRawMetric(p.shots, 0.8, 5.5, false), 0.16],
-          [scoreFromRawMetric(p.touches_box, 0.5, 8, false), 0.12],
-          [scoreFromRawMetric(p.progressive_runs, 0.2, 3.8, false), 0.08],
-          [scoreFromRawMetric(p.dribbles, 0.1, 3, false), 0.05],
-          [scoreFromRawMetric(p.xa, 0.01, 0.18, false), 0.03],
-          [scorePercent(p.aerial_duels_won, 30, 75), 0.04],
-          [scoreFromRawMetric(p.top_speed, 28, 36, false), 0.02]
-        ])).toFixed(2));
-      }
-
-      return 6.0;
-    }
-
-    function getWeightedRating(p) {
-      const rating = toNumber(p.rating);
-      const leagueFactor = toNumber(p.league_factor) || 1;
-      const adaptation = toNumber(p.adaptation_score) || 50;
-      let weighted = rating + ((leagueFactor - 1) * 0.8);
-      weighted += ((adaptation - 50) / 50) * 0.2;
-      return Number(clampRating(weighted).toFixed(2));
-    }
-
-    function buildPlayerObject(row) {
-  const rawPosition = getValue(row, ["Position", "Positions", "Posición", "Role"], "");
-  const mainPosition = detectMainPosition(rawPosition);
-
-  const p = {
-    player: normalizeText(getValue(row, ["Player", "Player name", "Name", "Jugador"], "")),
-    team: normalizeText(getValue(row, ["Team", "Club", "Equipo"], "")),
-    age: toNumber(getValue(row, ["Age", "Edad"], 0)),
-    minutes: toNumber(getValue(row, ["Minutes played", "Minutes", "Minutos", "Playing time"], 0)),
-    foot: normalizeText(getValue(row, ["Foot", "Preferred foot", "Pie"], "")),
-    raw_position: rawPosition,
-    main_position: mainPosition,
-
-    goals: toNumber(getValue(row, ["Goals", "Goles", "Goals per 90"], 0)),
-    assists: toNumber(getValue(row, ["Assists", "Asistencias", "Assists per 90"], 0)),
-    xg: toNumber(getValue(row, ["xG", "Expected goals", "xG per 90"], 0)),
-    xa: toNumber(getValue(row, ["xA", "Expected assists", "xA per 90"], 0)),
-    shots: toNumber(getValue(row, ["Shots", "Shots per 90", "Remates", "Shots total"], 0)),
-    progressive_runs: toNumber(getValue(row, ["Progressive runs per 90", "Progressive runs", "Carries progressive per 90", "Progressive carries per 90"], 0)),
-    dribbles: toNumber(getValue(row, ["Dribbles per 90", "Dribbles", "Successful dribbles per 90"], 0)),
-    crosses: toNumber(getValue(row, ["Crosses per 90", "Crosses", "Accurate crosses per 90"], 0)),
-    defensive_duels_won: toNumber(getValue(row, ["Defensive duels won, %", "Defensive duels won %"], 0)),
-    aerial_duels_won: toNumber(getValue(row, ["Aerial duels won, %", "Aerial duels won %"], 0)),
-    interceptions: toNumber(getValue(row, ["Interceptions per 90", "Interceptions"], 0)),
-    passes_final_third: toNumber(getValue(row, ["Passes to final third per 90", "Passes final third per 90", "Passes to final third"], 0)),
-    passes_acc: toNumber(getValue(row, ["Accurate passes, %", "Pass accuracy, %"], 0)),
-    progressive_passes: toNumber(getValue(row, ["Progressive passes per 90", "Progressive passes"], 0)),
-    through_passes: toNumber(getValue(row, ["Through passes per 90", "Through passes"], 0)),
-    through_passes_acc: toNumber(getValue(row, ["Accurate through passes, %", "Through passes accuracy, %"], 0)),
-    key_passes: toNumber(getValue(row, ["Key passes per 90", "Key passes"], 0)),
-    touches_box: toNumber(getValue(row, ["Touches in box per 90", "Touches in penalty area per 90"], 0)),
-    non_penalty_goals: toNumber(getValue(row, ["Non-penalty goals", "Non-penalty goals per 90"], 0)),
-    top_speed: toNumber(getValue(row, ["Top speed", "Maximum speed", "Sprint speed"], 0)),
-    recoveries: toNumber(getValue(row, ["Recoveries per 90", "Ball recoveries per 90"], 0)),
-    long_passes_acc: toNumber(getValue(row, ["Accurate long passes, %", "Long passes accuracy, %"], 0)),
-    forward_passes_acc: toNumber(getValue(row, ["Accurate forward passes, %", "Forward passes accuracy, %"], 0)),
-    p_adj_tackles: toNumber(getValue(row, ["PAdj Sliding tackles", "PAdj tackles", "PAdj sliding tackles"], 0)),
-    p_adj_interceptions: toNumber(getValue(row, ["PAdj Interceptions", "PAdj interceptions"], 0)),
-    league_factor: toNumber(getValue(row, ["league_factor", "League Factor", "Factor Liga"], 1)) || 1,
-    adaptation_score: toNumber(getValue(row, ["adaptation_score_final", "adaptation_score", "Adaptation Score", "Adaptation"], 50)) || 50
-  };
-
-  if (!p.player) return null;
-
-  if (p.main_position === "UNKNOWN") {
-    p.main_position = "CF";
-  }
-
-  p.rating = getPlayerRating(p);
-  p.weighted_rating = getWeightedRating(p);
-  p.external_id = (p.player + "__" + p.team + "__" + p.main_position).toLowerCase();
-
-  return p;
-}
-    async function loadExcels() {
-  const input = document.getElementById("excelFiles");
-  const files = input.files;
-
-  if (!files || files.length === 0) {
-    alert("Selecciona al menos un Excel.");
-    return;
-  }
-
-  if (typeof XLSX === "undefined") {
-    alert("No se ha cargado la librería XLSX. Revisa que estés conectado a internet y vuelve a abrir el HTML.");
-    setStatus("Error: XLSX no cargado.");
-    return;
-  }
-
-  setStatus("Cargando Excel...");
-  allPlayers = [];
-
-  try {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: "array" });
-
-      for (let s = 0; s < workbook.SheetNames.length; s++) {
-        const sheetName = workbook.SheetNames[s];
-        const worksheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
-        for (let r = 0; r < rows.length; r++) {
-          const p = buildPlayerObject(rows[r]);
-          if (p && p.player) {
-            allPlayers.push(p);
-          }
-        }
-      }
-    }
-
-    if (allPlayers.length === 0) {
-      alert("He leído el archivo, pero no he encontrado jugadores. Lo más probable es que los nombres de columnas no coincidan.");
-      setStatus("Excel leído, pero 0 jugadores detectados.");
-      return;
-    }
-
-    allPlayers = deduplicatePlayers(allPlayers);
-    currentPlayers = allPlayers.slice();
-    populateFilters(allPlayers);
-    applyFilters();
-
-    setStatus("Excel cargado: " + allPlayers.length + " jugadores.");
-  } catch (e) {
-    console.error(e);
-    alert("Error al leer el Excel.");
-    setStatus("Error al cargar Excel.");
-  }
-}
-
-    async function saveToSupabase() {
-      if (!allPlayers.length) {
-        alert("Primero carga el Excel.");
-        return;
-      }
-
-      if (!supabase && !initSupabase()) return;
-
-      setStatus("Guardando en Supabase...");
-
-      try {
-        const batchSize = 500;
-
-        for (let i = 0; i < allPlayers.length; i += batchSize) {
-          const batch = allPlayers.slice(i, i + batchSize).map(function(p) {
-            return {
-              external_id: p.external_id,
-              player: p.player,
-              team: p.team,
-              age: p.age,
-              minutes: p.minutes,
-              foot: p.foot,
-              raw_position: p.raw_position,
-              main_position: p.main_position,
-              goals: p.goals,
-              assists: p.assists,
-              xg: p.xg,
-              xa: p.xa,
-              shots: p.shots,
-              progressive_runs: p.progressive_runs,
-              dribbles: p.dribbles,
-              crosses: p.crosses,
-              defensive_duels_won: p.defensive_duels_won,
-              aerial_duels_won: p.aerial_duels_won,
-              interceptions: p.interceptions,
-              passes_final_third: p.passes_final_third,
-              league_factor: p.league_factor,
-              adaptation_score: p.adaptation_score,
-              rating: p.rating,
-              weighted_rating: p.weighted_rating
-            };
-          });
-
-          const result = await supabase
-            .from(SUPABASE_TABLE)
-            .upsert(batch, { onConflict: "external_id" });
-
-          if (result.error) throw result.error;
-        }
-
-        setStatus("Guardado correcto en Supabase: " + allPlayers.length + " jugadores.");
-      } catch (e) {
-        console.error(e);
-        setStatus("Error guardando en Supabase.");
-      }
-    }
-
-    async function loadFromSupabase() {
-      if (!supabase && !initSupabase()) return;
-
-      setStatus("Cargando desde Supabase...");
-
-      try {
-        let from = 0;
-        const pageSize = 1000;
-        let rows = [];
-        let keepLoading = true;
-
-        while (keepLoading) {
-          const result = await supabase
-            .from(SUPABASE_TABLE)
-            .select("*")
-            .range(from, from + pageSize - 1);
-
-          if (result.error) throw result.error;
-
-          if (!result.data || result.data.length === 0) {
-            keepLoading = false;
-          } else {
-            rows = rows.concat(result.data);
-            from += pageSize;
-            if (result.data.length < pageSize) keepLoading = false;
-          }
-        }
-
-        allPlayers = rows.map(function(row) {
-          return {
-            player: row.player || "",
-            team: row.team || "",
-            age: toNumber(row.age),
-            minutes: toNumber(row.minutes),
-            foot: row.foot || "",
-            raw_position: row.raw_position || "",
-            main_position: row.main_position || "",
-            goals: toNumber(row.goals),
-            assists: toNumber(row.assists),
-            xg: toNumber(row.xg),
-            xa: toNumber(row.xa),
-            shots: toNumber(row.shots),
-            progressive_runs: toNumber(row.progressive_runs),
-            dribbles: toNumber(row.dribbles),
-            crosses: toNumber(row.crosses),
-            defensive_duels_won: toNumber(row.defensive_duels_won),
-            aerial_duels_won: toNumber(row.aerial_duels_won),
-            interceptions: toNumber(row.interceptions),
-            passes_final_third: toNumber(row.passes_final_third),
-            passes_acc: toNumber(row.passes_acc),
-            progressive_passes: toNumber(row.progressive_passes),
-            through_passes: toNumber(row.through_passes),
-            through_passes_acc: toNumber(row.through_passes_acc),
-            key_passes: toNumber(row.key_passes),
-            touches_box: toNumber(row.touches_box),
-            non_penalty_goals: toNumber(row.non_penalty_goals),
-            top_speed: toNumber(row.top_speed),
-            recoveries: toNumber(row.recoveries),
-            long_passes_acc: toNumber(row.long_passes_acc),
-            forward_passes_acc: toNumber(row.forward_passes_acc),
-            p_adj_tackles: toNumber(row.p_adj_tackles),
-            p_adj_interceptions: toNumber(row.p_adj_interceptions),
-            league_factor: toNumber(row.league_factor || 1),
-            adaptation_score: toNumber(row.adaptation_score || 50),
-            rating: toNumber(row.rating),
-            weighted_rating: toNumber(row.weighted_rating),
-            external_id: row.external_id || ""
-          };
-        });
-
-        currentPlayers = allPlayers.slice();
-        populateFilters(allPlayers);
-        applyFilters();
-        setStatus("Datos cargados desde Supabase: " + allPlayers.length + " jugadores.");
-      } catch (e) {
-        console.error(e);
-        setStatus("Error cargando desde Supabase.");
-      }
-    }
-
-    function deduplicatePlayers(players) {
-      const map = new Map();
-      for (let i = 0; i < players.length; i++) {
-        const p = players[i];
-        const key = p.external_id || (p.player + "__" + p.team + "__" + p.main_position);
-        if (!map.has(key)) {
-          map.set(key, p);
-        } else {
-          const existing = map.get(key);
-          if (p.minutes > existing.minutes) {
-            map.set(key, p);
-          }
-        }
-      }
-      return Array.from(map.values());
-    }
-
-    function uniqueSorted(values) {
-      const clean = values.filter(function(v) {
-        return v !== null && v !== undefined && v !== "";
-      });
-      return Array.from(new Set(clean)).sort(function(a, b) {
-        return String(a).localeCompare(String(b), "es", { sensitivity: "base" });
-      });
-    }
-
-    function populateSelect(id, values, firstLabel) {
-      const select = document.getElementById(id);
-      select.innerHTML = '<option value="">' + firstLabel + '</option>';
-      for (let i = 0; i < values.length; i++) {
-        const option = document.createElement("option");
-        option.value = values[i];
-        option.textContent = values[i];
-        select.appendChild(option);
-      }
-    }
-
-    function populateFilters(players) {
-      populateSelect("filterTeam", uniqueSorted(players.map(function(p) { return p.team; })), "Equipo");
-
-      const orderedPositions = ["RB", "LB", "CB", "DMF", "MC", "AMF", "RW", "LW", "CF"];
-      const existing = new Set(players.map(function(p) { return p.main_position; }));
-      const finalPositions = orderedPositions.filter(function(pos) { return existing.has(pos); });
-      populateSelect("filterPosition", finalPositions, "Posición");
-    }
-
-    function sortPlayers(players, sortBy) {
-      const arr = players.slice();
-
-      arr.sort(function(a, b) {
-        if (sortBy === "rating") return b.rating - a.rating;
-        if (sortBy === "weighted_rating") return b.weighted_rating - a.weighted_rating;
-        if (sortBy === "minutes") return b.minutes - a.minutes;
-        if (sortBy === "age_asc") return a.age - b.age;
-        if (sortBy === "age_desc") return b.age - a.age;
-        if (sortBy === "player") return a.player.localeCompare(b.player, "es", { sensitivity: "base" });
-        return b.weighted_rating - a.weighted_rating;
-      });
-
-      return arr;
-    }
-
-    function applyFilters() {
-      const team = document.getElementById("filterTeam").value;
-      const position = document.getElementById("filterPosition").value;
-      const minAge = toNumber(document.getElementById("filterMinAge").value);
-      const maxAge = toNumber(document.getElementById("filterMaxAge").value);
-      const minMinutes = toNumber(document.getElementById("filterMinMinutes").value);
-      const minRating = toNumber(document.getElementById("filterMinRating").value);
-      const minWeighted = toNumber(document.getElementById("filterMinWeighted").value);
-      const sortBy = document.getElementById("sortBy").value;
-
-      let filtered = allPlayers.filter(function(p) {
-        const okTeam = !team || p.team === team;
-        const okPosition = !position || p.main_position === position;
-        const okMinAge = !minAge || p.age >= minAge;
-        const okMaxAge = !maxAge || p.age <= maxAge;
-        const okMinutes = !minMinutes || p.minutes >= minMinutes;
-        const okRating = !minRating || p.rating >= minRating;
-        const okWeighted = !minWeighted || p.weighted_rating >= minWeighted;
-        return okTeam && okPosition && okMinAge && okMaxAge && okMinutes && okRating && okWeighted;
-      });
-
-      filtered = sortPlayers(filtered, sortBy);
-      currentPlayers = filtered.slice();
-      renderTable(filtered);
-      renderSummary(filtered);
-    }
-
-    function clearFilters() {
-      document.getElementById("filterTeam").value = "";
-      document.getElementById("filterPosition").value = "";
-      document.getElementById("filterMinAge").value = "";
-      document.getElementById("filterMaxAge").value = "";
-      document.getElementById("filterMinMinutes").value = "";
-      document.getElementById("filterMinRating").value = "";
-      document.getElementById("filterMinWeighted").value = "";
-      document.getElementById("sortBy").value = "weighted_rating";
-      applyFilters();
-    }
-
-    function formatNum(value) {
-      const n = toNumber(value);
-      if (!n) return "";
-      return n % 1 === 0 ? String(n) : n.toFixed(2);
+    let filteredPlayers = [];
+    let sortKey = "WeightedRating";
+    let sortAsc = false;
+    let supabaseClient = null;
+
+    // =========================
+    // HELPERS
+    // =========================
+    function setStatus(msg) {
+      document.getElementById("status").textContent = msg;
     }
 
     function escapeHtml(str) {
-      return String(str || "")
+      return String(str ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
@@ -782,53 +280,514 @@
         .replace(/'/g, "&#039;");
     }
 
-    function ratingBadge(value) {
-      if (value >= 8.6) return '<span class="good">' + value.toFixed(2) + '</span>';
-      if (value < 6.4) return '<span class="bad">' + value.toFixed(2) + '</span>';
-      return '<span class="mid">' + value.toFixed(2) + '</span>';
+    function toNumber(value) {
+      if (value === null || value === undefined || value === "") return 0;
+      if (typeof value === "number") return isFinite(value) ? value : 0;
+      const cleaned = String(value).replace(/,/g, ".").replace(/[^\d.\-]/g, "");
+      const n = parseFloat(cleaned);
+      return isNaN(n) ? 0 : n;
     }
 
+    function formatNum(value) {
+      const n = toNumber(value);
+      if (!isFinite(n)) return "";
+      if (Math.abs(n - Math.round(n)) < 0.0001) return String(Math.round(n));
+      return n.toFixed(2);
+    }
+
+    function getFirstExisting(obj, candidates) {
+      for (const key of candidates) {
+        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
+          return obj[key];
+        }
+      }
+      return "";
+    }
+
+    function normalizePosition(raw) {
+      const value = String(raw || "").toUpperCase().trim();
+
+      if (!value) return "";
+
+      // Si viene una lista separada por coma, usamos la primera
+      const first = value.split(",")[0].trim();
+
+      if (["RB", "RWB"].includes(first)) return "RB";
+      if (["LB", "LWB"].includes(first)) return "LB";
+      if (["RCB", "LCB", "CB"].includes(first)) return "CB";
+      if (["DMF", "CDM", "DM"].includes(first)) return "DMF";
+      if (["CMF", "CM", "MC"].includes(first)) return "MC";
+      if (["AMF", "CAM", "AM"].includes(first)) return "AMF";
+      if (["RW", "RWF"].includes(first)) return "RW";
+      if (["LW", "LWF"].includes(first)) return "LW";
+      if (["CF"].includes(first)) return "CF";
+      if (["ST"].includes(first)) return "ST";
+
+      return first;
+    }
+
+    function percentileRank(arr, value) {
+      if (!arr.length) return 0.5;
+      const sorted = [...arr].sort((a, b) => a - b);
+      let count = 0;
+      for (const n of sorted) {
+        if (n <= value) count++;
+      }
+      return count / sorted.length;
+    }
+
+    function scoreToTen(p) {
+      return +(4 + p * 6).toFixed(2); // 4.00 a 10.00
+    }
+
+    // =========================
+    // MÉTRICAS POR POSICIÓN
+    // =========================
+    const POSITION_MODELS = {
+      RB: {
+        metrics: [
+          { key: "Progressive runs per 90", weight: 1.5 },
+          { key: "Dribbles per 90", weight: 1.2 },
+          { key: "Crosses per 90", weight: 1.0 },
+          { key: "Assists per 90", weight: 1.0 },
+          { key: "Defensive duels won, %", weight: 1.4 },
+          { key: "Interceptions per 90", weight: 1.1 }
+        ]
+      },
+      LB: {
+        metrics: [
+          { key: "Progressive runs per 90", weight: 1.5 },
+          { key: "Dribbles per 90", weight: 1.2 },
+          { key: "Crosses per 90", weight: 1.0 },
+          { key: "Assists per 90", weight: 1.0 },
+          { key: "Defensive duels won, %", weight: 1.4 },
+          { key: "Interceptions per 90", weight: 1.1 }
+        ]
+      },
+      CB: {
+        metrics: [
+          { key: "Defensive duels won, %", weight: 1.5 },
+          { key: "Aerial duels won, %", weight: 1.5 },
+          { key: "Interceptions per 90", weight: 1.2 },
+          { key: "PAdj Sliding tackles", weight: 1.0 },
+          { key: "Accurate passes, %", weight: 1.0 },
+          { key: "Progressive passes per 90", weight: 1.0 }
+        ]
+      },
+      DMF: {
+        metrics: [
+          { key: "Defensive duels won, %", weight: 1.3 },
+          { key: "Interceptions per 90", weight: 1.3 },
+          { key: "Accurate passes, %", weight: 1.2 },
+          { key: "Passes to final third per 90", weight: 1.1 },
+          { key: "Progressive passes per 90", weight: 1.1 },
+          { key: "Aerial duels won, %", weight: 1.0 }
+        ]
+      },
+      MC: {
+        metrics: [
+          { key: "Assists per 90", weight: 1.0 },
+          { key: "xA per 90", weight: 1.2 },
+          { key: "Passes to final third per 90", weight: 1.2 },
+          { key: "Progressive passes per 90", weight: 1.2 },
+          { key: "Dribbles per 90", weight: 1.0 },
+          { key: "Interceptions per 90", weight: 0.9 }
+        ]
+      },
+      AMF: {
+        metrics: [
+          { key: "Goals per 90", weight: 1.1 },
+          { key: "Assists per 90", weight: 1.2 },
+          { key: "xG per 90", weight: 1.1 },
+          { key: "xA per 90", weight: 1.2 },
+          { key: "Dribbles per 90", weight: 1.1 },
+          { key: "Passes to final third per 90", weight: 1.0 }
+        ]
+      },
+      RW: {
+        metrics: [
+          { key: "Goals per 90", weight: 1.0 },
+          { key: "Assists per 90", weight: 1.1 },
+          { key: "xG per 90", weight: 1.0 },
+          { key: "xA per 90", weight: 1.0 },
+          { key: "Dribbles per 90", weight: 1.4 },
+          { key: "Progressive runs per 90", weight: 1.3 }
+        ]
+      },
+      LW: {
+        metrics: [
+          { key: "Goals per 90", weight: 1.0 },
+          { key: "Assists per 90", weight: 1.1 },
+          { key: "xG per 90", weight: 1.0 },
+          { key: "xA per 90", weight: 1.0 },
+          { key: "Dribbles per 90", weight: 1.4 },
+          { key: "Progressive runs per 90", weight: 1.3 }
+        ]
+      },
+      CF: {
+        metrics: [
+          { key: "Goals per 90", weight: 1.5 },
+          { key: "xG per 90", weight: 1.3 },
+          { key: "Shots per 90", weight: 1.2 },
+          { key: "Touches in box per 90", weight: 1.2 },
+          { key: "Aerial duels won, %", weight: 0.9 },
+          { key: "Dribbles per 90", weight: 0.8 }
+        ]
+      },
+      ST: {
+        metrics: [
+          { key: "Goals per 90", weight: 1.5 },
+          { key: "xG per 90", weight: 1.3 },
+          { key: "Shots per 90", weight: 1.2 },
+          { key: "Touches in box per 90", weight: 1.2 },
+          { key: "Aerial duels won, %", weight: 0.9 },
+          { key: "Dribbles per 90", weight: 0.8 }
+        ]
+      }
+    };
+
+    // =========================
+    // SUPABASE OPCIONAL
+    // =========================
+    function initSupabaseFromStorage() {
+      const url = localStorage.getItem("supabase_url") || "";
+      const key = localStorage.getItem("supabase_key") || "";
+
+      document.getElementById("supabaseUrl").value = url;
+      document.getElementById("supabaseKey").value = key;
+
+      try {
+        if (url && key && window.supabase && window.supabase.createClient) {
+          supabaseClient = window.supabase.createClient(url, key);
+          console.log("Supabase inicializado");
+        } else {
+          supabaseClient = null;
+        }
+      } catch (err) {
+        console.error("Supabase init error:", err);
+        supabaseClient = null;
+      }
+    }
+
+    document.getElementById("saveSupabaseConfig").addEventListener("click", () => {
+      const url = document.getElementById("supabaseUrl").value.trim();
+      const key = document.getElementById("supabaseKey").value.trim();
+
+      localStorage.setItem("supabase_url", url);
+      localStorage.setItem("supabase_key", key);
+
+      initSupabaseFromStorage();
+      setStatus("Configuración Supabase guardada. La carga de Excel sigue siendo local.");
+    });
+
+    // =========================
+    // LECTURA EXCEL
+    // =========================
+    document.getElementById("excelFile").addEventListener("change", handleFileUpload);
+
+    function handleFileUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      setStatus("Leyendo Excel...");
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+
+          if (!workbook.SheetNames.length) {
+            setStatus("El Excel no contiene hojas.");
+            return;
+          }
+
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+
+          if (!rows.length) {
+            setStatus("La hoja está vacía.");
+            return;
+          }
+
+          allPlayers = normalizeRows(rows);
+          calculateRatings(allPlayers);
+          filteredPlayers = [...allPlayers];
+          renderTable(sortPlayers(filteredPlayers));
+
+          setStatus(`Excel cargado correctamente. ${allPlayers.length} jugadores leídos.`);
+          trySaveToSupabase(allPlayers);
+        } catch (error) {
+          console.error(error);
+          setStatus("Error al leer el Excel. Revisa consola del navegador.");
+        }
+      };
+
+      reader.onerror = function(err) {
+        console.error(err);
+        setStatus("No se pudo leer el archivo.");
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    function normalizeRows(rows) {
+      return rows.map((row, idx) => {
+        const player = {
+          raw: row,
+          id: idx + 1,
+          Player: getFirstExisting(row, ["Player", "Jugador", "Name"]),
+          Team: getFirstExisting(row, ["Team", "Equipo", "Squad"]),
+          Position: getFirstExisting(row, ["Position", "Posición", "Pos"]),
+          Age: toNumber(getFirstExisting(row, ["Age", "Edad"])),
+          ["Minutes played"]: toNumber(getFirstExisting(row, ["Minutes played", "Minutes", "Minutos"])),
+          ["Goals per 90"]: toNumber(getFirstExisting(row, ["Goals per 90", "Goles por 90", "Goals/90"])),
+          ["Assists per 90"]: toNumber(getFirstExisting(row, ["Assists per 90", "Asistencias por 90", "Assists/90"])),
+          ["xG per 90"]: toNumber(getFirstExisting(row, ["xG per 90", "xG/90"])),
+          ["xA per 90"]: toNumber(getFirstExisting(row, ["xA per 90", "xA/90"])),
+          ["Shots per 90"]: toNumber(getFirstExisting(row, ["Shots per 90", "Shots/90", "Remates por 90"])),
+          ["Touches in box per 90"]: toNumber(getFirstExisting(row, ["Touches in box per 90", "Touches in box/90"])),
+          ["Dribbles per 90"]: toNumber(getFirstExisting(row, ["Dribbles per 90", "Dribbles/90"])),
+          ["Progressive runs per 90"]: toNumber(getFirstExisting(row, ["Progressive runs per 90", "Prog runs/90"])),
+          ["Crosses per 90"]: toNumber(getFirstExisting(row, ["Crosses per 90", "Crosses/90"])),
+          ["Defensive duels won, %"]: toNumber(getFirstExisting(row, ["Defensive duels won, %", "Def duels won %"])),
+          ["Aerial duels won, %"]: toNumber(getFirstExisting(row, ["Aerial duels won, %", "Aerial won %"])),
+          ["Interceptions per 90"]: toNumber(getFirstExisting(row, ["Interceptions per 90", "Interceptions/90"])),
+          ["PAdj Sliding tackles"]: toNumber(getFirstExisting(row, ["PAdj Sliding tackles"])),
+          ["Accurate passes, %"]: toNumber(getFirstExisting(row, ["Accurate passes, %", "Pass accuracy %"])),
+          ["Progressive passes per 90"]: toNumber(getFirstExisting(row, ["Progressive passes per 90", "Prog passes/90"])),
+          ["Passes to final third per 90"]: toNumber(getFirstExisting(row, ["Passes to final third per 90", "Passes to final 3rd per 90"])),
+          league_factor: toNumber(getFirstExisting(row, ["league_factor", "League Factor"])) || 1
+        };
+
+        player.Position_main = normalizePosition(player.Position);
+        player.Rating = 0;
+        player.WeightedRating = 0;
+
+        return player;
+      }).filter(p => p.Player);
+    }
+
+    // =========================
+    // RATINGS
+    // =========================
+    function calculateRatings(players) {
+      const groups = {};
+      for (const p of players) {
+        const pos = p.Position_main || "OTHER";
+        if (!groups[pos]) groups[pos] = [];
+        groups[pos].push(p);
+      }
+
+      for (const pos in groups) {
+        const model = POSITION_MODELS[pos];
+        const groupPlayers = groups[pos];
+
+        if (!model) {
+          for (const p of groupPlayers) {
+            p.Rating = 5.5;
+            p.WeightedRating = +(p.Rating * (p.league_factor || 1)).toFixed(2);
+          }
+          continue;
+        }
+
+        const metricArrays = {};
+        for (const metric of model.metrics) {
+          metricArrays[metric.key] = groupPlayers.map(p => toNumber(p[metric.key]));
+        }
+
+        for (const p of groupPlayers) {
+          let totalWeight = 0;
+          let weightedScore = 0;
+
+          for (const metric of model.metrics) {
+            const value = toNumber(p[metric.key]);
+            const percentile = percentileRank(metricArrays[metric.key], value);
+            const score = scoreToTen(percentile);
+            weightedScore += score * metric.weight;
+            totalWeight += metric.weight;
+          }
+
+          p.Rating = totalWeight ? +(weightedScore / totalWeight).toFixed(2) : 5.5;
+          p.WeightedRating = +(p.Rating * (p.league_factor || 1)).toFixed(2);
+        }
+      }
+    }
+
+    // =========================
+    // FILTROS
+    // =========================
+    document.getElementById("applyFilters").addEventListener("click", applyFilters);
+    document.getElementById("clearFilters").addEventListener("click", clearFilters);
+
+    function applyFilters() {
+      const position = document.getElementById("filterPosition").value.trim();
+      const team = document.getElementById("filterTeam").value.trim().toLowerCase();
+      const ageMax = toNumber(document.getElementById("filterAge").value);
+      const minMinutes = toNumber(document.getElementById("filterMinutes").value);
+      const minRating = toNumber(document.getElementById("filterRating").value);
+
+      filteredPlayers = allPlayers.filter(p => {
+        if (position && p.Position_main !== position) return false;
+        if (team && !String(p.Team || "").toLowerCase().includes(team)) return false;
+        if (ageMax && p.Age > ageMax) return false;
+        if (minMinutes && p["Minutes played"] < minMinutes) return false;
+        if (minRating && p.WeightedRating < minRating) return false;
+        return true;
+      });
+
+      renderTable(sortPlayers(filteredPlayers));
+      setStatus(`Filtros aplicados. ${filteredPlayers.length} jugadores mostrados.`);
+    }
+
+    function clearFilters() {
+      document.getElementById("filterPosition").value = "";
+      document.getElementById("filterTeam").value = "";
+      document.getElementById("filterAge").value = "";
+      document.getElementById("filterMinutes").value = "";
+      document.getElementById("filterRating").value = "";
+      filteredPlayers = [...allPlayers];
+      renderTable(sortPlayers(filteredPlayers));
+      setStatus(`Filtros limpiados. ${filteredPlayers.length} jugadores mostrados.`);
+    }
+
+    // =========================
+    // ORDENACIÓN
+    // =========================
+    document.querySelectorAll("#playersTable thead th").forEach(th => {
+      th.addEventListener("click", () => {
+        const key = th.getAttribute("data-sort");
+        if (!key) return;
+
+        if (sortKey === key) {
+          sortAsc = !sortAsc;
+        } else {
+          sortKey = key;
+          sortAsc = false;
+        }
+
+        renderTable(sortPlayers(filteredPlayers));
+      });
+    });
+
+    function sortPlayers(players) {
+      const arr = [...players];
+      arr.sort((a, b) => {
+        const va = a[sortKey];
+        const vb = b[sortKey];
+
+        const na = toNumber(va);
+        const nb = toNumber(vb);
+
+        const bothNumeric = !(isNaN(na) || isNaN(nb)) && (typeof va === "number" || typeof vb === "number" || /\d/.test(String(va)) || /\d/.test(String(vb)));
+
+        let result = 0;
+        if (bothNumeric) {
+          result = na - nb;
+        } else {
+          result = String(va ?? "").localeCompare(String(vb ?? ""));
+        }
+
+        return sortAsc ? result : -result;
+      });
+      return arr;
+    }
+
+    // =========================
+    // TABLA
+    // =========================
     function renderTable(players) {
       const tbody = document.querySelector("#playersTable tbody");
       tbody.innerHTML = "";
 
-      for (let i = 0; i < players.length; i++) {
-        const p = players[i];
+      if (!players.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="16" style="text-align:center; padding:20px;">No hay datos para mostrar</td>
+          </tr>
+        `;
+        return;
+      }
+
+      for (const p of players) {
         const tr = document.createElement("tr");
-        tr.innerHTML =
-          "<td>" + escapeHtml(p.player) + "</td>" +
-          "<td>" + escapeHtml(p.team) + "</td>" +
-          "<td>" + (p.age || "") + "</td>" +
-          "<td>" + Math.round(p.minutes || 0) + "</td>" +
-          "<td>" + escapeHtml(p.main_position) + "</td>" +
-          "<td>" + ratingBadge(toNumber(p.rating)) + "</td>" +
-          "<td>" + ratingBadge(toNumber(p.weighted_rating)) + "</td>" +
-          "<td>" + formatNum(p.goals) + "</td>" +
-          "<td>" + formatNum(p.assists) + "</td>" +
-          "<td>" + formatNum(p.xg) + "</td>" +
-          "<td>" + formatNum(p.xa) + "</td>" +
-          "<td>" + formatNum(p.shots) + "</td>" +
-          "<td>" + formatNum(p.progressive_runs) + "</td>" +
-          "<td>" + formatNum(p.dribbles) + "</td>" +
-          "<td>" + formatNum(p.crosses) + "</td>" +
-          "<td>" + formatNum(p.defensive_duels_won) + "</td>" +
-          "<td>" + formatNum(p.aerial_duels_won) + "</td>" +
-          "<td>" + formatNum(p.passes_final_third) + "</td>" +
-          "<td>" + formatNum(p.interceptions) + "</td>";
+
+        const weightedClass = p.WeightedRating >= 7.5 ? "good" : (p.WeightedRating <= 5.5 ? "bad" : "");
+        const ratingClass = p.Rating >= 7.5 ? "good" : (p.Rating <= 5.5 ? "bad" : "");
+
+        tr.innerHTML = `
+          <td>${escapeHtml(p.Player)}</td>
+          <td>${escapeHtml(p.Team)}</td>
+          <td><span class="pill">${escapeHtml(p.Position_main)}</span></td>
+          <td>${formatNum(p.Age)}</td>
+          <td>${formatNum(p["Minutes played"])}</td>
+          <td class="${ratingClass}">${formatNum(p.Rating)}</td>
+          <td class="${weightedClass}">${formatNum(p.WeightedRating)}</td>
+          <td>${formatNum(p["Goals per 90"])}</td>
+          <td>${formatNum(p["Assists per 90"])}</td>
+          <td>${formatNum(p["xG per 90"])}</td>
+          <td>${formatNum(p["xA per 90"])}</td>
+          <td>${formatNum(p["Dribbles per 90"])}</td>
+          <td>${formatNum(p["Progressive runs per 90"])}</td>
+          <td>${formatNum(p["Crosses per 90"])}</td>
+          <td>${formatNum(p["Defensive duels won, %"])}</td>
+          <td>${formatNum(p["Aerial duels won, %"])}</td>
+        `;
+
         tbody.appendChild(tr);
       }
     }
 
-    function renderSummary(players) {
-      const summary = document.getElementById("summary");
-      if (!players.length) {
-        summary.innerHTML = "No hay jugadores con los filtros actuales.";
+    // =========================
+    // SUPABASE: GUARDAR DATOS SIN ROMPER APP
+    // =========================
+    async function trySaveToSupabase(players) {
+      if (!supabaseClient) {
+        console.log("Supabase no configurado. Se omite guardado.");
         return;
       }
-      const avgRating = players.reduce(function(sum, p) { return sum + toNumber(p.rating); }, 0) / players.length;
-      const avgWeighted = players.reduce(function(sum, p) { return sum + toNumber(p.weighted_rating); }, 0) / players.length;
-      summary.innerHTML = "Jugadores mostrados: <b>" + players.length + "</b> | Rating medio: <b>" + avgRating.toFixed(2) + "</b> | Weighted medio: <b>" + avgWeighted.toFixed(2) + "</b>";
+
+      try {
+        const payload = players.map(p => ({
+          player: p.Player,
+          team: p.Team,
+          position: p.Position_main,
+          age: p.Age,
+          minutes_played: p["Minutes played"],
+          rating: p.Rating,
+          weighted_rating: p.WeightedRating
+        }));
+
+        const { error } = await supabaseClient
+          .from("players")
+          .upsert(payload, { onConflict: "player,team,position" });
+
+        if (error) {
+          console.error("Supabase upsert error:", error);
+          setStatus(`Excel cargado. Supabase no guardó, pero la app sigue funcionando.`);
+          return;
+        }
+
+        setStatus(`Excel cargado correctamente y datos guardados en Supabase.`);
+      } catch (err) {
+        console.error("Supabase error:", err);
+        setStatus(`Excel cargado correctamente. Supabase falló, pero la app sigue funcionando.`);
+      }
     }
+
+    // =========================
+    // INICIO
+    // =========================
+    window.addEventListener("load", () => {
+      try {
+        initSupabaseFromStorage();
+        setStatus("Esperando Excel...");
+      } catch (err) {
+        console.error(err);
+        setStatus("La app arrancó con errores menores. Prueba a cargar el Excel.");
+      }
+    });
   </script>
 </body>
 </html>
