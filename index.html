@@ -327,186 +327,66 @@
     </section>
 
     <section class="hero">
-      <div class="card">
-        <div class="hero-main">
-          <div class="eyebrow">Versión estable</div>
-          <h2>Excel, filtros y diseño bueno. Sin Supabase, sin líos.</h2>
-          <p>
-            Esta es la base que sí merece la pena usar de verdad. Carga Excel, calcula rating por posición
-            y te deja trabajar cómodo.
-          </p>
 
-          <div class="stats">
-            <div class="stat"><div class="k">Jugadores</div><div class="v" id="heroPlayers">0</div></div>
-            <div class="stat"><div class="k">Posiciones</div><div class="v" id="heroPositions">0</div></div>
-            <div class="stat"><div class="k">Mejor rating</div><div class="v" id="heroBest">0.00</div></div>
-            <div class="stat"><div class="k">Origen</div><div class="v" id="heroSource">LOCAL</div></div>
-          </div>
+  <!-- IZQUIERDA (INFO) -->
+  <div class="card">
+    <div class="hero-main">
+      <div class="eyebrow">Versión estable</div>
+      <h2>Scouting dashboard listo para usar</h2>
+      <p>Carga Excel, filtra y analiza jugadores en segundos.</p>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="k">Jugadores</div>
+          <div class="v" id="heroPlayers">0</div>
+        </div>
+        <div class="stat">
+          <div class="k">Posiciones</div>
+          <div class="v" id="heroPositions">0</div>
+        </div>
+        <div class="stat">
+          <div class="k">Mejor rating</div>
+          <div class="v" id="heroBest">0.00</div>
+        </div>
+        <div class="stat">
+          <div class="k">Origen</div>
+          <div class="v">LOCAL</div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="card">
-        <div class="hero-side">
-          <div class="side-title">Carga de archivo</div>
+  <!-- DERECHA (CARGA EXCEL) -->
+  <div class="card">
+    <div class="hero-side">
 
-          <div class="field">
-  <label>Equipo</label>
-  <select id="filterTeam">
-    <option value="">Todos</option>
-  </select>
-</div>
+      <div class="side-title">Carga de Excel</div>
 
-          <div class="field">
-            <label>Hoja</label>
-            <select id="sheetSelect"></select>
-          </div>
-
-          <div class="actions">
-            <button class="btn-primary" id="reloadSheet">Actualizar hoja</button>
-          </div>
-
-          <div id="status" class="status">Esperando archivo...</div>
-
-          <div class="field">
-            <label>Hoja actual</label>
-            <input type="text" id="currentSheet" readonly placeholder="Sin hoja cargada" />
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="filter-bar">
-      <div class="filter-head">
-        <div>
-          <div class="filter-title">Filtros de scouting</div>
-          <div class="filter-note">Se actualizan al cambiar cualquier valor.</div>
-        </div>
-        <div class="actions">
-          <button class="btn-primary" id="applyFilters">Aplicar</button>
-          <button class="btn-secondary" id="clearFilters">Reset</button>
-        </div>
+      <div class="field">
+        <label>Selecciona archivo</label>
+        <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
       </div>
 
-      <div class="filters">
-        <div class="field">
-          <label>Posición</label>
-          <select id="filterPosition">
-            <option value="">Todas</option>
-            <option value="RB">RB</option>
-            <option value="LB">LB</option>
-            <option value="CB">CB</option>
-            <option value="DMF">DMF</option>
-            <option value="MC">MC</option>
-            <option value="AMF">AMF</option>
-            <option value="RW">RW</option>
-            <option value="LW">LW</option>
-            <option value="CF">CF</option>
-            <option value="ST">ST</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Equipo</label>
-          <input type="text" id="filterTeam" placeholder="Ej: Al Ain" />
-        </div>
-
-        <div class="field">
-          <label>Edad máxima</label>
-          <input type="number" id="filterAge" placeholder="Ej: 23" />
-        </div>
-
-        <div class="field">
-          <label>Minutos mínimos</label>
-          <input type="number" id="filterMinutes" placeholder="Ej: 700" />
-        </div>
-
-        <div class="field">
-          <label>Rating mínimo</label>
-          <input type="number" step="0.1" id="filterRating" placeholder="Ej: 7.5" />
-        </div>
-
-        <div class="field">
-          <label>Jugador contiene</label>
-          <input type="text" id="filterPlayer" placeholder="Buscar nombre" />
-        </div>
-
-        <div class="field">
-          <label>Top N</label>
-          <input type="number" id="filterTopN" placeholder="Ej: 25" />
-        </div>
-
-        <div class="field">
-          <label>Orden principal</label>
-          <select id="sortMode">
-            <option value="Rating">Rating</option>
-            <option value="PosPercentile">Pct Pos</option>
-            <option value="Minutes played">Minutos</option>
-            <option value="Age">Edad</option>
-          </select>
-        </div>
-      </div>
-    </section>
-
-    <section class="summary-grid">
-      <div class="summary-card">
-        <div class="k">Jugadores mostrados</div>
-        <div class="v" id="sumVisible">0</div>
-        <div class="s">tras filtros</div>
-      </div>
-      <div class="summary-card">
-        <div class="k">Edad media</div>
-        <div class="v" id="sumAge">0.0</div>
-        <div class="s">visible dataset</div>
-      </div>
-      <div class="summary-card">
-        <div class="k">Rating medio</div>
-        <div class="v" id="sumRating">0.00</div>
-        <div class="s">comparado por rol</div>
-      </div>
-      <div class="summary-card">
-        <div class="k">Top jugador</div>
-        <div class="v" id="sumTop">—</div>
-        <div class="s" id="sumTopSub">sin datos</div>
-      </div>
-    </section>
-
-    <section class="table-card">
-      <div class="table-top">
-        <div>
-          <div class="table-title">Ranking de jugadores</div>
-          <div class="table-sub">Versión estable sin Supabase.</div>
-        </div>
+      <div class="field">
+        <label>Hoja</label>
+        <select id="sheetSelect"></select>
       </div>
 
-      <div class="table-wrap">
-        <table id="playersTable">
-          <thead>
-            <tr>
-              <th data-sort="__rank">Top</th>
-              <th data-sort="Player">Jugador</th>
-              <th data-sort="Team">Equipo</th>
-              <th data-sort="Position_main">Posición</th>
-              <th data-sort="Age">Edad</th>
-              <th data-sort="Minutes played">Min</th>
-              <th data-sort="Rating">Rating</th>
-              <th data-sort="PosPercentile">Pct Pos</th>
-              <th data-sort="Goals per 90">Goals/90</th>
-              <th data-sort="Assists per 90">Assists/90</th>
-              <th data-sort="xG per 90">xG/90</th>
-              <th data-sort="xA per 90">xA/90</th>
-              <th data-sort="Dribbles per 90">Dribbles/90</th>
-              <th data-sort="Progressive runs per 90">Prog Runs/90</th>
-              <th data-sort="Crosses per 90">Crosses/90</th>
-              <th data-sort="Defensive duels won, %">Def Duels Won %</th>
-              <th data-sort="Aerial duels won, %">Aerial Won %</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td colspan="17" class="empty">Carga un Excel para empezar.</td></tr>
-          </tbody>
-        </table>
+      <div class="actions">
+        <button class="btn-primary" id="reloadSheet">Cargar datos</button>
       </div>
-    </section>
+
+      <div id="status" class="status">Sube un Excel para empezar</div>
+
+      <div class="field">
+        <label>Hoja actual</label>
+        <input type="text" id="currentSheet" readonly>
+      </div>
+
+    </div>
+  </div>
+
+</section>
   </div>
 
   <script>
