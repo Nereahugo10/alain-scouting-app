@@ -463,9 +463,7 @@
   if (!p.player) return null;
 
   if (p.main_position === "UNKNOWN") {
-    if (p.raw_position) {
-      console.log("Posición no reconocida:", p.raw_position, "Jugador:", p.player);
-    }
+    p.main_position = "CF";
   }
 
   p.rating = getPlayerRating(p);
@@ -474,13 +472,18 @@
 
   return p;
 }
-
     async function loadExcels() {
   const input = document.getElementById("excelFiles");
   const files = input.files;
 
   if (!files || files.length === 0) {
     alert("Selecciona al menos un Excel.");
+    return;
+  }
+
+  if (typeof XLSX === "undefined") {
+    alert("No se ha cargado la librería XLSX. Revisa que estés conectado a internet y vuelve a abrir el HTML.");
+    setStatus("Error: XLSX no cargado.");
     return;
   }
 
@@ -493,15 +496,10 @@
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data, { type: "array" });
 
-      console.log("Archivo:", file.name);
-      console.log("Hojas:", workbook.SheetNames);
-
       for (let s = 0; s < workbook.SheetNames.length; s++) {
         const sheetName = workbook.SheetNames[s];
         const worksheet = workbook.Sheets[sheetName];
         const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
-        console.log("Hoja:", sheetName, "Filas:", rows.length);
 
         for (let r = 0; r < rows.length; r++) {
           const p = buildPlayerObject(rows[r]);
@@ -512,9 +510,9 @@
       }
     }
 
-    if (!allPlayers.length) {
-      setStatus("Se leyó el Excel pero no se detectó ningún jugador.");
-      alert("El Excel se ha leído, pero no he detectado jugadores. Abre F12 > Console y mira qué nombre tienen tus columnas.");
+    if (allPlayers.length === 0) {
+      alert("He leído el archivo, pero no he encontrado jugadores. Lo más probable es que los nombres de columnas no coincidan.");
+      setStatus("Excel leído, pero 0 jugadores detectados.");
       return;
     }
 
@@ -526,8 +524,8 @@
     setStatus("Excel cargado: " + allPlayers.length + " jugadores.");
   } catch (e) {
     console.error(e);
+    alert("Error al leer el Excel.");
     setStatus("Error al cargar Excel.");
-    alert("Error al cargar Excel. Mira F12 > Console.");
   }
 }
 
