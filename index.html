@@ -6,7 +6,6 @@
   <title>AL AIN SCOUTING PRO</title>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -164,7 +163,6 @@
     }
 
     button{cursor:pointer;font-weight:800}
-
     .btn-primary{
       background:linear-gradient(135deg, var(--accent), var(--accent2));
       color:white;box-shadow:0 12px 28px rgba(91,140,255,.25);
@@ -173,13 +171,9 @@
       background:linear-gradient(180deg, #14203b, #10182d);
       color:#dbe7ff;border:1px solid #2b4069;
     }
-    .btn-success{
-      background:linear-gradient(135deg, #16a34a, #22c55e);
-      color:white;border:1px solid rgba(34,197,94,.4);
-    }
-    .btn-info{
-      background:linear-gradient(135deg, #0ea5e9, #2563eb);
-      color:white;border:1px solid rgba(59,130,246,.35);
+
+    .actions{
+      display:flex;gap:10px;flex-wrap:wrap;
     }
 
     .status{
@@ -211,16 +205,8 @@
       color:var(--muted);font-size:13px;
     }
 
-    .config-grid{
-      display:grid;grid-template-columns:1fr 1fr;gap:12px;
-    }
-
     .filters{
       display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px;align-items:end;
-    }
-
-    .actions{
-      display:flex;gap:10px;flex-wrap:wrap;
     }
 
     .summary-grid{
@@ -309,7 +295,7 @@
     @media (max-width:1280px){
       .hero{grid-template-columns:1fr}
       .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .filters,.config-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .filters{grid-template-columns:repeat(2,minmax(0,1fr))}
       .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     }
 
@@ -317,7 +303,7 @@
       .shell{padding:14px}
       .topbar{flex-direction:column;align-items:flex-start}
       .hero-main h2{font-size:30px}
-      .stats,.filters,.summary-grid,.config-grid{grid-template-columns:1fr}
+      .stats,.filters,.summary-grid{grid-template-columns:1fr}
       .filter-head,.table-top{flex-direction:column;align-items:flex-start}
     }
   </style>
@@ -330,23 +316,24 @@
         <div class="brand-mark">AA</div>
         <div>
           <h1>AL AIN SCOUTING PRO</h1>
-          <p>Visual dashboard · positional percentile model · Excel + Supabase</p>
+          <p>Visual dashboard · positional percentile model · Excel only</p>
         </div>
       </div>
       <div class="top-actions">
         <div class="tag">PRO MODEL</div>
         <div class="tag">LIVE FILTERS</div>
-        <div class="tag">SUPABASE SAFE</div>
+        <div class="tag">STABLE BUILD</div>
       </div>
     </section>
 
     <section class="hero">
       <div class="card">
         <div class="hero-main">
-          <div class="eyebrow">Base estable</div>
-          <h2>Primero carga Excel. Luego guarda en Supabase sin duplicados.</h2>
+          <div class="eyebrow">Versión estable</div>
+          <h2>Excel, filtros y diseño bueno. Sin Supabase, sin líos.</h2>
           <p>
-            Esta versión no deja que Supabase rompa la carga del Excel. Si Supabase falla, la app sigue viva.
+            Esta es la base que sí merece la pena usar de verdad. Carga Excel, calcula rating por posición
+            y te deja trabajar cómodo.
           </p>
 
           <div class="stats">
@@ -374,8 +361,6 @@
 
           <div class="actions">
             <button class="btn-primary" id="reloadSheet">Actualizar hoja</button>
-            <button class="btn-success" id="saveToSupabase">Guardar en Supabase</button>
-            <button class="btn-info" id="loadFromSupabase">Cargar desde Supabase</button>
           </div>
 
           <div id="status" class="status">Esperando archivo...</div>
@@ -384,29 +369,6 @@
             <label>Hoja actual</label>
             <input type="text" id="currentSheet" readonly placeholder="Sin hoja cargada" />
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="filter-bar">
-      <div class="filter-head">
-        <div>
-          <div class="filter-title">Configuración Supabase</div>
-          <div class="filter-note">Guárdala una vez. No afecta a la carga local del Excel.</div>
-        </div>
-        <div class="actions">
-          <button class="btn-primary" id="saveSupabaseConfig">Guardar config</button>
-        </div>
-      </div>
-
-      <div class="config-grid">
-        <div class="field">
-          <label>Supabase URL</label>
-          <input type="text" id="supabaseUrl" placeholder="https://xxxx.supabase.co" />
-        </div>
-        <div class="field">
-          <label>Supabase anon key</label>
-          <input type="text" id="supabaseKey" placeholder="Pega aquí tu anon key" />
         </div>
       </div>
     </section>
@@ -510,7 +472,7 @@
       <div class="table-top">
         <div>
           <div class="table-title">Ranking de jugadores</div>
-          <div class="table-sub">Carga Excel primero. Supabase después.</div>
+          <div class="table-sub">Versión estable sin Supabase.</div>
         </div>
       </div>
 
@@ -538,7 +500,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td colspan="17" class="empty">Carga un Excel o usa Supabase.</td></tr>
+            <tr><td colspan="17" class="empty">Carga un Excel para empezar.</td></tr>
           </tbody>
         </table>
       </div>
@@ -551,9 +513,6 @@
     let filteredPlayers = [];
     let sortKey = "Rating";
     let sortAsc = false;
-    let currentSource = "LOCAL";
-    let supabaseClient = null;
-    const SUPABASE_TABLE = "players";
 
     const POSITION_MODELS = {
       RB: [["Progressive runs per 90",1.45],["Dribbles per 90",1.20],["Crosses per 90",1.10],["Assists per 90",1.00],["Defensive duels won, %",1.35],["xA per 90",0.95]],
@@ -574,16 +533,8 @@
       el.textContent = msg;
     }
 
-    function setSourceLabel(source) {
-      currentSource = source;
-      document.getElementById("heroSource").textContent = source;
-    }
-
     function safe(v) {
-      return String(v ?? "")
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;");
+      return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     }
 
     function toNumber(value) {
@@ -905,7 +856,7 @@
       if (topN > 0) filteredPlayers = filteredPlayers.slice(0, topN);
 
       renderTable(sortRows(filteredPlayers));
-      setStatus(`Filtros actualizados.\nJugadores visibles: ${filteredPlayers.length}\nOrigen: ${currentSource}`, "ok");
+      setStatus(`Filtros actualizados.\nJugadores visibles: ${filteredPlayers.length}`, "ok");
     }
 
     function clearFilters() {
@@ -920,7 +871,7 @@
       filteredPlayers = [...allPlayers];
       filteredPlayers = getSortedVisible(filteredPlayers);
       renderTable(sortRows(filteredPlayers));
-      setStatus(`Filtros reseteados.\nJugadores visibles: ${filteredPlayers.length}\nOrigen: ${currentSource}`, "ok");
+      setStatus(`Filtros reseteados.\nJugadores visibles: ${filteredPlayers.length}`, "ok");
     }
 
     function attachLiveFilters() {
@@ -961,7 +912,6 @@
         calculateProRatings(allPlayers);
         filteredPlayers = getSortedVisible([...allPlayers]);
         renderTable(sortRows(filteredPlayers));
-        setSourceLabel("LOCAL");
 
         setStatus(`Excel cargado correctamente.\nJugadores válidos: ${allPlayers.length}`, "ok");
       } catch (err) {
@@ -970,149 +920,9 @@
       }
     }
 
-    function initSupabaseFromStorage() {
-      const url = localStorage.getItem("supabase_url") || "";
-      const key = localStorage.getItem("supabase_key") || "";
-
-      document.getElementById("supabaseUrl").value = url;
-      document.getElementById("supabaseKey").value = key;
-
-      try {
-        if (url && key && window.supabase && window.supabase.createClient) {
-          supabaseClient = window.supabase.createClient(url, key);
-        } else {
-          supabaseClient = null;
-        }
-      } catch (err) {
-        console.error(err);
-        supabaseClient = null;
-      }
-    }
-
-    function saveSupabaseConfig() {
-      localStorage.setItem("supabase_url", document.getElementById("supabaseUrl").value.trim());
-      localStorage.setItem("supabase_key", document.getElementById("supabaseKey").value.trim());
-      initSupabaseFromStorage();
-      setStatus("Configuración Supabase guardada.", "ok");
-    }
-
-    function ensureSupabase() {
-      if (!supabaseClient) {
-        setStatus("Supabase no está configurado. Guarda URL y anon key primero.", "error");
-        return false;
-      }
-      return true;
-    }
-
-    function mapPlayerForSupabase(p) {
-      return {
-        player_key: p.player_key,
-        player: p.Player || "",
-        team: p.Team || "",
-        position_raw: p.Position || "",
-        position_main: p.Position_main || "",
-        age: toNumber(p.Age),
-        minutes_played: toNumber(p["Minutes played"]),
-        goals_per_90: toNumber(p["Goals per 90"]),
-        assists_per_90: toNumber(p["Assists per 90"]),
-        xg_per_90: toNumber(p["xG per 90"]),
-        xa_per_90: toNumber(p["xA per 90"]),
-        dribbles_per_90: toNumber(p["Dribbles per 90"]),
-        progressive_runs_per_90: toNumber(p["Progressive runs per 90"]),
-        crosses_per_90: toNumber(p["Crosses per 90"]),
-        defensive_duels_won_pct: toNumber(p["Defensive duels won, %"]),
-        aerial_duels_won_pct: toNumber(p["Aerial duels won, %"]),
-        base_score: toNumber(p.BaseScore),
-        pos_percentile: toNumber(p.PosPercentile),
-        rating: toNumber(p.Rating),
-        source_sheet: document.getElementById("currentSheet").value || null,
-        updated_at_client: new Date().toISOString()
-      };
-    }
-
-    function mapSupabaseRowToPlayer(r, idx) {
-      return {
-        id: idx + 1,
-        player_key: r.player_key,
-        Player: r.player,
-        Team: r.team,
-        Position: r.position_raw,
-        Position_main: r.position_main,
-        Age: toNumber(r.age),
-        ["Minutes played"]: toNumber(r.minutes_played),
-        ["Goals per 90"]: toNumber(r.goals_per_90),
-        ["Assists per 90"]: toNumber(r.assists_per_90),
-        ["xG per 90"]: toNumber(r.xg_per_90),
-        ["xA per 90"]: toNumber(r.xa_per_90),
-        ["Dribbles per 90"]: toNumber(r.dribbles_per_90),
-        ["Progressive runs per 90"]: toNumber(r.progressive_runs_per_90),
-        ["Crosses per 90"]: toNumber(r.crosses_per_90),
-        ["Defensive duels won, %"]: toNumber(r.defensive_duels_won_pct),
-        ["Aerial duels won, %"]: toNumber(r.aerial_duels_won_pct),
-        BaseScore: toNumber(r.base_score),
-        PosPercentile: toNumber(r.pos_percentile),
-        Rating: toNumber(r.rating)
-      };
-    }
-
-    async function savePlayersToSupabase() {
-      if (!ensureSupabase()) return;
-      if (!allPlayers.length) {
-        setStatus("No hay jugadores cargados para guardar.", "error");
-        return;
-      }
-
-      try {
-        const payload = allPlayers.map(mapPlayerForSupabase);
-        setStatus(`Guardando ${payload.length} jugadores en Supabase...`);
-
-        const chunkSize = 500;
-        for (let i = 0; i < payload.length; i += chunkSize) {
-          const chunk = payload.slice(i, i + chunkSize);
-          const { error } = await supabaseClient
-            .from(SUPABASE_TABLE)
-            .upsert(chunk, { onConflict: "player_key" });
-
-          if (error) throw error;
-        }
-
-        setStatus(`Guardado completado.\nJugadores procesados: ${payload.length}\nSin duplicados por player_key`, "ok");
-      } catch (err) {
-        console.error(err);
-        setStatus("Error guardando en Supabase:\n" + (err.message || err), "error");
-      }
-    }
-
-    async function loadPlayersFromSupabase() {
-      if (!ensureSupabase()) return;
-
-      try {
-        setStatus("Cargando jugadores desde Supabase...");
-        const { data, error } = await supabaseClient
-          .from(SUPABASE_TABLE)
-          .select("*")
-          .order("rating", { ascending: false });
-
-        if (error) throw error;
-
-        allPlayers = (data || []).map(mapSupabaseRowToPlayer);
-        filteredPlayers = getSortedVisible([...allPlayers]);
-        renderTable(sortRows(filteredPlayers));
-        setSourceLabel("SUPABASE");
-
-        setStatus(`Jugadores cargados desde Supabase.\nTotal: ${allPlayers.length}`, "ok");
-      } catch (err) {
-        console.error(err);
-        setStatus("Error cargando desde Supabase:\n" + (err.message || err), "error");
-      }
-    }
-
     document.getElementById("reloadSheet").addEventListener("click", loadSelectedSheet);
     document.getElementById("applyFilters").addEventListener("click", applyFilters);
     document.getElementById("clearFilters").addEventListener("click", clearFilters);
-    document.getElementById("saveSupabaseConfig").addEventListener("click", saveSupabaseConfig);
-    document.getElementById("saveToSupabase").addEventListener("click", savePlayersToSupabase);
-    document.getElementById("loadFromSupabase").addEventListener("click", loadPlayersFromSupabase);
 
     document.getElementById("excelFile").addEventListener("change", function(e) {
       const file = e.target.files && e.target.files[0];
@@ -1172,8 +982,7 @@
 
     window.addEventListener("load", function() {
       attachLiveFilters();
-      initSupabaseFromStorage();
-      setStatus("Página lista. Selecciona un Excel o usa Supabase.");
+      setStatus("Página lista. Selecciona un Excel.");
     });
   </script>
 </body>
